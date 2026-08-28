@@ -990,8 +990,7 @@ function calcularPorProteina() {
   const gord = food.gord * fator;
   resultado.innerHTML = `
     <div class="suggestion" style="margin-top:10px;">
-      <strong>${quantidade.toFixed(0)}${food.unidade === 'g' || food.unidade === 'ml' ? food.unidade : ' ' + food.unidade + (quantidade >= 2 ? 's' : '')}</strong> de ${food.nome}<br>
-      fornece aproximadamente: <strong>${alvoProteina.toFixed(0)}g proteína</strong> · ${kcal.toFixed(0)}kcal · ${carb.toFixed(1)}g carb · ${gord.toFixed(1)}g gordura
+const date = hojeStr();      fornece aproximadamente: <strong>${alvoProteina.toFixed(0)}g proteína</strong> · ${kcal.toFixed(0)}kcal · ${carb.toFixed(1)}g carb · ${gord.toFixed(1)}g gordura
     </div>`;
 }
 
@@ -1021,7 +1020,7 @@ const MEALS = [
     dica: "~40g de proteína de digestão lenta (caseína, iogurte grego, queijo cottage) antes de dormir eleva a síntese proteica muscular overnight (Res et al., 2012)." }
 ];
 
-function hojeStr() { return new Date().toISOString().slice(0, 10); }
+function hojeStr() { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
 
 /* ============ PESO CORPORAL ============ */
 async function salvarPeso() {
@@ -1750,7 +1749,7 @@ function renderMobilidadeAtivaItem(item) {
 /* ============ FINALIZAR TREINO ============ */
 async function finalizarTreino() {
   const status = document.getElementById('status');
-  const date = new Date().toISOString().slice(0, 10);
+  const date = hojeStr();
   const sono = document.getElementById('f-sono').value || null;
   const obs = document.getElementById('f-obs').value || '';
 
@@ -1898,7 +1897,7 @@ function mostrarPreviewGarmin(parsed) {
 
 async function salvarCorridaGarmin() {
   const status = document.getElementById('garmin-status');
-  const date = new Date().toISOString().slice(0, 10);
+  const date = hojeStr();
   const entry = {
     date, type: 'corrida',
     distancia: document.getElementById('g-dist').value || null,
@@ -2083,7 +2082,7 @@ async function analisarSemana() {
 
     // salva a análise no histórico para referência futura
     try {
-      const date = new Date().toISOString().slice(0, 10);
+      const date = hojeStr();
       await storage.set('log:' + date + ':analise:' + Date.now(), JSON.stringify({ date, type: 'analise', obs: texto }));
     } catch (e) {}
 
