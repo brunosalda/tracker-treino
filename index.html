@@ -508,6 +508,19 @@ const storage = {
   }
 };
 
+                                       /* ============ REABRIR "APP" NA TELA DE INICIO (iOS) ============
+                                          No iOS, o app adicionado a Tela de Inicio (modo standalone)
+                                             costuma ficar suspenso em segundo plano em vez de recarregar --
+                                                reabrir so "acorda" a pagina antiga, sem buscar dados novos do
+                                                   Supabase. Isso forca uma recarga sempre que o app volta a ficar
+                                                      visivel. */
+  window.addEventListener('pageshow', function (event) {
+      if (event.persisted) location.reload();
+  });
+  document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') location.reload();
+  });
+
 const SVG_ACCENT = "#4fd1c5";
 const SVG_ACCENT_DIM = "#2c7a72";
 const SVG_DIM = "#9aa3b2";
