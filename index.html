@@ -210,7 +210,7 @@
       <input type="number" step="0.5" id="f-sono">
       <label>Observações da sessão (dor, dificuldade, sensação — uso isso pra sugerir ajustes)</label>
       <textarea id="f-obs" placeholder="Ex: joelho doeu levemente no agachamento, treino pareceu mais pesado que o normal..."></textarea>
-      <button class="big" onclick="finalizarTreino()">Finalizar e salvar treino</button>
+      <button class="big" onclick="encerrarTreino()">Encerrar treino</button>
       <div id="status"></div>
     </div>
   </div>
@@ -508,18 +508,17 @@ const storage = {
   }
 };
 
-                                       /* ============ REABRIR "APP" NA TELA DE INICIO (iOS) ============
-                                          No iOS, o app adicionado a Tela de Inicio (modo standalone)
-                                             costuma ficar suspenso em segundo plano em vez de recarregar --
-                                                reabrir so "acorda" a pagina antiga, sem buscar dados novos do
-                                                   Supabase. Isso forca uma recarga sempre que o app volta a ficar
-                                                      visivel. */
-  window.addEventListener('pageshow', function (event) {
-      if (event.persisted) location.reload();
-  });
-  document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible') location.reload();
-  });
+/* ============ REABRIR "APP" NA TELA DE INICIO (iOS) ============
+   No iOS, o app adicionado a Tela de Inicio (modo standalone) costuma
+   ficar suspenso em segundo plano em vez de recarregar — reabrir só
+   "acorda" a página antiga, sem buscar dados novos do Supabase. Isso
+   força uma recarga sempre que o app volta a ficar visível. */
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted) location.reload();
+});
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible') location.reload();
+});
 
 const SVG_ACCENT = "#4fd1c5";
 const SVG_ACCENT_DIM = "#2c7a72";
@@ -1327,6 +1326,13 @@ let sessionSets = {}; // { exerciseId: [ {weight, reps, rir/time} ] }
 let currentDayType = null;
 let restInterval = null;
 
+// Sessão de treino guiada (wizard de clique único) + autosave por série
+let wizard = null;           // { exercicios, exIdx, setIdx, tipoSessao }
+let currentLogKey = null;    // chave 'log:AAAA-MM-DD:timestamp' da sessão em andamento
+let currentLogEntry = null;  // objeto salvo a cada série registrada (autosave)
+let wizardTimer = null;      // interval do descanso (contagem regressiva)
+let wizardStopwatch = null;  // interval do cronômetro de série por tempo (contagem crescente)
+
 /* ============ TABS ============ */
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
@@ -1390,6 +1396,11 @@ function initDaySelect() {
 async function renderWorkoutArea(type) {
   currentDayType = type;
   sessionSets = {};
+  currentLogKey = null;
+  currentLogEntry = null;
+  wizard = null;
+  clearInterval(wizardTimer);
+  clearInterval(wizardStopwatch);
   const area = document.getElementById('workout-area');
   const finalizar = document.getElementById('finalizar-card');
   const today = new Date().getDay();
@@ -1416,15 +1427,15 @@ async function renderWorkoutArea(type) {
           <li><strong>Deload:</strong><span class="qmark" onclick="abrirGlossario('deload')">?</span> a cada 4 semanas, considere 1 semana com ~40–50% do volume (menos séries) se sentir fadiga acumulada, dor persistente ou queda de desempenho.</li>
           <li>Amplitude completa (ROM<span class="qmark" onclick="abrirGlossario('rom')">?</span> total) em todos os exercícios — é parte do estímulo de hipertrofia e também trabalha sua mobilidade.</li>
         </ul>
-      </div>` +
-      prog.exercicios.map(ex => renderExerciseCard(ex)).join('') +
-      `<div class="card">
+      </div>
+      <div id="wizard-area"></div>
+      <div class="card">
         <h3>Finalização — alongamento MMII (~10 min)</h3>
         <p style="font-size:13px;color:var(--text-dim);">Independente do treino do dia, feche a sessão com este bloco curto — trabalha diretamente sua prioridade de mobilidade e ajuda a completar a hora de treino.</p>
         ${LIBRARY.mobilidade.items.filter(i => ['mob-quadril', 'mob-isquio', 'mob-adutor', 'mob-tornozelo'].includes(i.id)).map(i => renderMobilidadeItem(i, 40, "1-2 séries de 30-45s", "final")).join('')}
       </div>`;
     finalizar.style.display = 'block';
-    for (const ex of prog.exercicios) await preencherSugestao(ex);
+    iniciarSessaoTreino(prog.exercicios, 'musculacao');
 
   } else if (type === 'corrida') {
     const semana = await getCorridaSemana();
@@ -1507,14 +1518,14 @@ async function renderWorkoutArea(type) {
         <h4 style="margin:0 0 4px;color:var(--accent);">Fase 3 — Circuito de estabilidade e core (15-20 min)</h4>
         <p style="font-size:12px;color:var(--text-dim);">Carga leve, foco em controle. Glúteo médio e core são pontos-chave de prevenção de lesão em corredores (Seção 3 e 9) — justifica o treino ser aqui na academia, não só alongamento.</p>
       </div>
-      ${circuito.exercicios.map(ex => renderExerciseCard(ex)).join('')}
+      <div id="wizard-area"></div>
 
       <div class="card">
         <label>Duração total (min)</label><input type="number" id="q-dur">
         <label>Áreas trabalhadas</label><input type="text" id="q-areas" placeholder="Ex: quadril, isquio, tornozelo, core">
       </div>`;
     finalizar.style.display = 'block';
-    for (const ex of circuito.exercicios) await preencherSugestao(ex);
+    iniciarSessaoTreino(circuito.exercicios, 'mobilidade');
   } else {
     area.innerHTML = `
       <div class="card">
@@ -1693,6 +1704,261 @@ function abrirCue(cueId) {
   renderBiblioteca(cueId);
 }
 
+/* ============ TREINO GUIADO (clique único, autosave por série) ============
+   Cada série registrada é salva no Supabase na hora (upsert na mesma chave
+   'log:AAAA-MM-DD:timestamp' da sessão) — não existe mais um botão de
+   "salvar treino" no final. O fluxo mostra sempre UMA tela por vez:
+   - exercícios por repetição: já entra direto no registro da série; ao
+     concluir, o descanso começa sozinho e, quando termina, a tela seguinte
+     (próxima série ou próximo exercício) já aparece pronta pra preencher.
+   - exercícios por tempo (isTime): aparece um botão "Iniciar série", que
+     dispara um cronômetro contando; ao concluir, o descanso começa sozinho
+     e, no final, aparece o botão pra iniciar a próxima série.
+   O botão "Encerrar treino" (ver encerrarTreino) só registra sono/observação
+   final — as séries já estão salvas antes disso. */
+
+function novoLogEntryBase(tipoSessao) {
+  const date = hojeStr();
+  const entry = { date, sono: null, obs: '' };
+  if (tipoSessao === 'musculacao') {
+    entry.type = 'musculacao';
+    entry.treino = currentDayType;
+    entry.sets = {};
+  } else if (tipoSessao === 'mobilidade') {
+    entry.type = 'mobilidade';
+    entry.duracao = null;
+    entry.areas = '';
+    entry.sets = {};
+  }
+  return entry;
+}
+
+function iniciarSessaoTreino(exercicios, tipoSessao) {
+  sessionSets = {};
+  currentLogKey = 'log:' + hojeStr() + ':' + Date.now();
+  currentLogEntry = novoLogEntryBase(tipoSessao);
+  wizard = { exercicios, exIdx: 0, setIdx: 0, tipoSessao };
+  renderWizardIntro();
+}
+
+function renderWizardIntro() {
+  const el = document.getElementById('wizard-area');
+  if (!el || !wizard) return;
+  el.innerHTML = `
+    <div class="card" style="text-align:center;">
+      <h3>Pronto pra começar?</h3>
+      <p style="font-size:13px;color:var(--text-dim);">${wizard.exercicios.length} exercícios nesta sessão. A tela vai te guiar um passo de cada vez — cada série já é salva sozinha assim que você registra.</p>
+      <button class="big" style="margin-top:6px;" onclick="iniciarProximaEtapaWizard()">▶ Iniciar treino</button>
+    </div>`;
+}
+
+function exercicioAtualWizard() {
+  return wizard.exercicios[wizard.exIdx];
+}
+
+function wizardExecHtml(ex) {
+  const cueItem = LIBRARY.musculacao.items.find(i => i.id === ex.cue);
+  if (!cueItem) return '';
+  return `
+    <details style="margin-top:8px;">
+      <summary>Como executar</summary>
+      ${acaoImagemVideo(DIAGRAMS[cueItem.id] || '', ex.nome)}
+      <h4>Execução</h4>
+      <ul>${cueItem.exec.map(e => `<li>${e}</li>`).join('')}</ul>
+      ${cueItem.erros && cueItem.erros.length ? `<h4>Erros comuns</h4><ul>${cueItem.erros.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+      ${cueItem.evidencia ? `<h4>Por quê</h4><p>${cueItem.evidencia}</p>` : ''}
+    </details>`;
+}
+
+function iniciarProximaEtapaWizard() {
+  if (!wizard) return;
+  const ex = exercicioAtualWizard();
+  const el = document.getElementById('wizard-area');
+  if (!el) return;
+  const progresso = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Exercício ${wizard.exIdx + 1}/${wizard.exercicios.length} · Série ${wizard.setIdx + 1}/${ex.sets}</div>`;
+
+  if (ex.isTime) {
+    el.innerHTML = `
+      <div class="card exercise-card">
+        ${progresso}
+        <div class="name" style="font-size:17px;">${ex.principal ? '🔥 ' : ''}${ex.nome}</div>
+        <div class="meta">${ex.sets} séries por tempo · descanso ${ex.rest}s</div>
+        ${wizardExecHtml(ex)}
+        <div class="suggestion" id="wizard-sugestao" style="margin-top:10px;">Carregando sugestão...</div>
+        <button class="big" style="margin-top:14px;width:100%;" onclick="iniciarCronometroSerieWizard()">▶ Iniciar série ${wizard.setIdx + 1}</button>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div class="card exercise-card">
+        ${progresso}
+        <div class="name" style="font-size:17px;">${ex.principal ? '🔥 ' : ''}${ex.nome}</div>
+        <div class="meta">${ex.repMin}–${ex.repMax} reps · descanso ${ex.rest}s</div>
+        ${wizardExecHtml(ex)}
+        <div class="suggestion" id="wizard-sugestao" style="margin-top:10px;">Carregando sugestão...</div>
+        <label>Peso (kg)</label>
+        <div class="stepper">
+          <button onclick="ajustarValorWizard('weight',-2.5)">−</button>
+          <div class="val" id="wizard-val-weight">20</div>
+          <button onclick="ajustarValorWizard('weight',2.5)">+</button>
+        </div>
+        <label>Repetições</label>
+        <div class="stepper">
+          <button onclick="ajustarValorWizard('reps',-1)">−</button>
+          <div class="val" id="wizard-val-reps">${ex.repMin}</div>
+          <button onclick="ajustarValorWizard('reps',1)">+</button>
+        </div>
+        <label>RIR<span class="qmark" onclick="abrirGlossario('rir')">?</span></label>
+        <div class="stepper">
+          <button onclick="ajustarValorWizard('rir',-1)">−</button>
+          <div class="val" id="wizard-val-rir">2</div>
+          <button onclick="ajustarValorWizard('rir',1)">+</button>
+        </div>
+        <button class="big" style="margin-top:10px;width:100%;" onclick="registrarSerieWizard()">Concluir série ${wizard.setIdx + 1}</button>
+      </div>`;
+  }
+  preencherSugestaoWizard(ex);
+}
+
+async function preencherSugestaoWizard(ex) {
+  const el = document.getElementById('wizard-sugestao');
+  if (!el) return;
+  try {
+    const r = await storage.get('lastset:' + ex.id);
+    if (!r || !r.value) {
+      el.textContent = ex.principal
+        ? "Primeira vez neste exercício — comece leve, suba aos poucos até achar uma carga de trabalho confortável (sem chegar perto da falha hoje)."
+        : "Primeira vez registrando este exercício — comece com uma carga confortável.";
+      return;
+    }
+    const last = JSON.parse(r.value);
+    if (ex.isTime) {
+      el.textContent = `Última vez: ${last.time}s. Tente igualar ou passar um pouco.`;
+      return;
+    }
+    let targetWeight = parseFloat(last.weight);
+    let texto = `Última vez: ${last.weight}kg x${last.reps} (RIR ${last.rir})`;
+    if (last.reps >= ex.repMax && last.rir <= 1 && ex.inc > 0) {
+      targetWeight = parseFloat(last.weight) + ex.inc;
+      texto += ` → sugestão: subir para ${targetWeight.toFixed(1)}kg`;
+    } else if (ex.inc > 0) {
+      texto += ` → sugestão: manter ${last.weight}kg, buscar +1 rep ou RIR menor`;
+    }
+    el.innerHTML = texto;
+    const wEl = document.getElementById('wizard-val-weight');
+    if (wEl && targetWeight > 0) wEl.textContent = targetWeight;
+  } catch (e) {
+    el.textContent = "Primeira vez registrando este exercício.";
+  }
+}
+
+function ajustarValorWizard(campo, delta) {
+  const el = document.getElementById(`wizard-val-${campo}`);
+  let v = parseFloat(el.textContent) + delta;
+  if (campo === 'rir') v = Math.max(0, Math.min(5, v));
+  if (campo === 'reps') v = Math.max(1, v);
+  if (campo === 'weight') v = Math.max(0, v);
+  el.textContent = v;
+}
+
+function iniciarCronometroSerieWizard() {
+  const ex = exercicioAtualWizard();
+  const el = document.getElementById('wizard-area');
+  let decorrido = 0;
+  el.innerHTML = `
+    <div class="card exercise-card" style="text-align:center;">
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Exercício ${wizard.exIdx + 1}/${wizard.exercicios.length} · Série ${wizard.setIdx + 1}/${ex.sets}</div>
+      <div class="name" style="font-size:17px;">${ex.nome}</div>
+      <div style="font-size:48px;font-weight:700;color:var(--accent);margin:20px 0;" id="wizard-cronometro">0s</div>
+      <button class="big" style="width:100%;" onclick="concluirCronometroSerieWizard()">✓ Concluir série ${wizard.setIdx + 1}</button>
+    </div>`;
+  clearInterval(wizardStopwatch);
+  wizardStopwatch = setInterval(() => {
+    decorrido++;
+    const c = document.getElementById('wizard-cronometro');
+    if (c) c.textContent = decorrido + 's'; else clearInterval(wizardStopwatch);
+  }, 1000);
+}
+
+async function concluirCronometroSerieWizard() {
+  clearInterval(wizardStopwatch);
+  const c = document.getElementById('wizard-cronometro');
+  const segundos = c ? parseInt(c.textContent) : 0;
+  await registrarSerieDadosWizard({ time: segundos });
+}
+
+async function registrarSerieWizard() {
+  const weight = parseFloat(document.getElementById('wizard-val-weight').textContent);
+  const reps = parseFloat(document.getElementById('wizard-val-reps').textContent);
+  const rir = parseFloat(document.getElementById('wizard-val-rir').textContent);
+  await registrarSerieDadosWizard({ weight, reps, rir });
+}
+
+async function registrarSerieDadosWizard(setData) {
+  const ex = exercicioAtualWizard();
+  if (!sessionSets[ex.id]) sessionSets[ex.id] = [];
+  sessionSets[ex.id].push(setData);
+  currentLogEntry.sets = sessionSets;
+
+  // autosave imediato: essa série já vai pro Supabase agora, sem esperar o fim do treino
+  try { await storage.set(currentLogKey, JSON.stringify(currentLogEntry)); } catch (e) {}
+  try { await storage.set('lastset:' + ex.id, JSON.stringify(setData)); } catch (e) {}
+
+  wizard.setIdx++;
+  iniciarDescansoWizard(ex.rest, ex);
+}
+
+function iniciarDescansoWizard(segundos, exConcluido) {
+  const el = document.getElementById('wizard-area');
+  let restante = segundos;
+  el.innerHTML = `
+    <div class="card exercise-card" style="text-align:center;">
+      <div style="font-size:12px;color:var(--text-dim);">Exercício ${wizard.exIdx + 1}/${wizard.exercicios.length} · Série ${wizard.setIdx}/${exConcluido.sets} concluída ✓</div>
+      <div style="font-size:14px;color:var(--text-dim);margin-top:6px;">Descanso</div>
+      <div style="font-size:48px;font-weight:700;color:var(--accent);margin:14px 0;" id="wizard-descanso-n">${restante}s</div>
+      <button class="secondary" onclick="pularDescansoWizard()">Pular descanso</button>
+    </div>`;
+  clearInterval(wizardTimer);
+  wizardTimer = setInterval(() => {
+    restante--;
+    const n = document.getElementById('wizard-descanso-n');
+    if (n) n.textContent = restante + 's';
+    if (restante <= 0) {
+      clearInterval(wizardTimer);
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      avancarEtapaWizard();
+    }
+  }, 1000);
+}
+
+function pularDescansoWizard() {
+  clearInterval(wizardTimer);
+  avancarEtapaWizard();
+}
+
+function avancarEtapaWizard() {
+  if (!wizard) return;
+  const ex = exercicioAtualWizard();
+  if (wizard.setIdx >= ex.sets) {
+    wizard.exIdx++;
+    wizard.setIdx = 0;
+  }
+  if (wizard.exIdx >= wizard.exercicios.length) {
+    renderWizardConcluido();
+    return;
+  }
+  iniciarProximaEtapaWizard();
+}
+
+function renderWizardConcluido() {
+  const el = document.getElementById('wizard-area');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="card" style="text-align:center;">
+      <h3>🎉 Treino de força concluído</h3>
+      <p style="font-size:13px;color:var(--text-dim);">Todas as séries já foram salvas automaticamente. Feche com o alongamento abaixo e registre sono/observações no fim da página pra encerrar.</p>
+    </div>`;
+}
+
 /* ============ CRONÔMETRO (descanso entre séries E alongamentos) ============ */
 function iniciarTimer(segundos, label) {
   clearInterval(restInterval);
@@ -1759,46 +2025,53 @@ function renderMobilidadeAtivaItem(item) {
 }
 
 
-/* ============ FINALIZAR TREINO ============ */
-async function finalizarTreino() {
+/* ============ ENCERRAR TREINO ============
+   As séries (musculação e circuito de mobilidade) já foram salvas uma a uma
+   pelo wizard, conforme registradas — este botão NÃO é o mecanismo de
+   salvamento. Ele só grava sono/observações finais (e, pra corrida/mobilidade
+   geral/descanso, os campos que não passam pelo wizard) na mesma entrada. */
+async function encerrarTreino() {
   const status = document.getElementById('status');
-  const date = hojeStr();
   const sono = document.getElementById('f-sono').value || null;
   const obs = document.getElementById('f-obs').value || '';
 
-  let entry = { date, sono, obs };
+  if (!currentLogEntry) {
+    currentLogKey = 'log:' + hojeStr() + ':' + Date.now();
+    if (currentDayType === 'A' || currentDayType === 'B' || currentDayType === 'C') {
+      currentLogEntry = novoLogEntryBase('musculacao');
+    } else if (currentDayType === 'mobilidade') {
+      currentLogEntry = novoLogEntryBase('mobilidade');
+    } else if (currentDayType === 'corrida') {
+      currentLogEntry = { date: hojeStr(), type: 'corrida', sono: null, obs: '' };
+    } else {
+      currentLogEntry = { date: hojeStr(), type: 'descanso', sono: null, obs: '' };
+    }
+  }
 
-  if (currentDayType === 'A' || currentDayType === 'B' || currentDayType === 'C') {
-    entry.type = 'musculacao';
-    entry.treino = currentDayType;
-    entry.sets = sessionSets;
-  } else if (currentDayType === 'corrida') {
-    entry.type = 'corrida';
-    entry.distancia = document.getElementById('q-dist').value || null;
-    entry.tempo = document.getElementById('q-tempo').value || null;
-    entry.zona = document.getElementById('q-zona').value;
+  currentLogEntry.sono = sono;
+  currentLogEntry.obs = obs;
+
+  if (currentDayType === 'corrida') {
+    currentLogEntry.distancia = document.getElementById('q-dist').value || null;
+    currentLogEntry.tempo = document.getElementById('q-tempo').value || null;
+    currentLogEntry.zona = document.getElementById('q-zona').value;
   } else if (currentDayType === 'mobilidade') {
-    entry.type = 'mobilidade';
-    entry.duracao = document.getElementById('q-dur').value || null;
-    entry.areas = document.getElementById('q-areas').value || '';
-    entry.sets = sessionSets;
-  } else {
-    entry.type = 'descanso';
+    currentLogEntry.duracao = document.getElementById('q-dur').value || null;
+    currentLogEntry.areas = document.getElementById('q-areas').value || '';
   }
 
   try {
-    const key = 'log:' + date + ':' + Date.now();
-    const result = await storage.set(key, JSON.stringify(entry));
+    const result = await storage.set(currentLogKey, JSON.stringify(currentLogEntry));
     if (result) {
-      status.textContent = '✓ Treino salvo com sucesso.';
+      status.textContent = '✓ Treino encerrado. (As séries já estavam salvas conforme você foi registrando.)';
       status.style.color = 'var(--accent)';
       document.getElementById('f-obs').value = '';
     } else {
-      status.textContent = 'Falha ao salvar. Tente novamente.';
+      status.textContent = 'Falha ao salvar sono/observações. As séries já registradas continuam salvas.';
       status.style.color = 'var(--danger)';
     }
   } catch (err) {
-    status.textContent = 'Erro: ' + err.message;
+    status.textContent = 'Erro: ' + err.message + ' — as séries já registradas continuam salvas.';
     status.style.color = 'var(--danger)';
   }
 }
