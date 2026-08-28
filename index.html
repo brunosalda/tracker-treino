@@ -1033,7 +1033,7 @@ const MEALS = [
     dica: "~40g de proteína de digestão lenta (caseína, iogurte grego, queijo cottage) antes de dormir eleva a síntese proteica muscular overnight (Res et al., 2012)." }
 ];
 
-function hojeStr() { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+function hojeStr() { const d = new Date(); if (d.getHours() < 4) { d.setDate(d.getDate() - 1); } return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
 
 /* ============ PESO CORPORAL ============ */
 async function salvarPeso() {
