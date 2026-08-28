@@ -1733,7 +1733,51 @@ function novoLogEntryBase(tipoSessao) {
   return entry;
 }
 
+// Retomada de sessão (o app minimizado/em segundo plano pode ser descarregado
+// da memória pelo navegador/celular — ao reabrir, o JS reinicia do zero. Sem
+// isso, o progresso do wizard "zerava" mesmo com as séries já salvas no Supabase.)
+const WIZARD_RESUME_KEY = 'wizardResume';
+
+function salvarWizardResume() {
+  if (!wizard || !currentLogKey) return;
+  try {
+    localStorage.setItem(WIZARD_RESUME_KEY, JSON.stringify({
+      date: hojeStr(),
+      dayType: currentDayType,
+      tipoSessao: wizard.tipoSessao,
+      exIdx: wizard.exIdx,
+      setIdx: wizard.setIdx,
+      currentLogKey,
+      currentLogEntry,
+      sessionSets
+    }));
+  } catch (e) {}
+}
+
+function limparWizardResume() {
+  try { localStorage.removeItem(WIZARD_RESUME_KEY); } catch (e) {}
+}
+
+function lerWizardResume() {
+  try {
+    const raw = localStorage.getItem(WIZARD_RESUME_KEY);
+    if (!raw) return null;
+    const st = JSON.parse(raw);
+    if (st.date !== hojeStr()) { limparWizardResume(); return null; }
+    return st;
+  } catch (e) { return null; }
+}
+
 function iniciarSessaoTreino(exercicios, tipoSessao) {
+  const resume = lerWizardResume();
+  if (resume && resume.dayType === currentDayType && resume.tipoSessao === tipoSessao && resume.currentLogKey) {
+    sessionSets = resume.sessionSets || {};
+    currentLogKey = resume.currentLogKey;
+    currentLogEntry = resume.currentLogEntry;
+    wizard = { exercicios, exIdx: resume.exIdx, setIdx: resume.setIdx, tipoSessao };
+    avancarOuMostrarEtapaWizard();
+    return;
+  }
   sessionSets = {};
   currentLogKey = 'log:' + hojeStr() + ':' + Date.now();
   currentLogEntry = novoLogEntryBase(tipoSessao);
@@ -1904,6 +1948,7 @@ async function registrarSerieDadosWizard(setData) {
   try { await storage.set('lastset:' + ex.id, JSON.stringify(setData)); } catch (e) {}
 
   wizard.setIdx++;
+  salvarWizardResume();
   iniciarDescansoWizard(ex.rest, ex);
 }
 
@@ -1936,6 +1981,12 @@ function pularDescansoWizard() {
 }
 
 function avancarEtapaWizard() {
+  avancarOuMostrarEtapaWizard();
+}
+
+// Compartilhada entre "descanso acabou normalmente" e "retomando sessão depois
+// de reabrir o app": decide se rola pro próximo exercício ou mostra a etapa atual.
+function avancarOuMostrarEtapaWizard() {
   if (!wizard) return;
   const ex = exercicioAtualWizard();
   if (wizard.setIdx >= ex.sets) {
@@ -1946,10 +1997,12 @@ function avancarEtapaWizard() {
     renderWizardConcluido();
     return;
   }
+  salvarWizardResume();
   iniciarProximaEtapaWizard();
 }
 
 function renderWizardConcluido() {
+  limparWizardResume();
   const el = document.getElementById('wizard-area');
   if (!el) return;
   el.innerHTML = `
@@ -2063,6 +2116,7 @@ async function encerrarTreino() {
   try {
     const result = await storage.set(currentLogKey, JSON.stringify(currentLogEntry));
     if (result) {
+      limparWizardResume();
       status.textContent = '✓ Treino encerrado. (As séries já estavam salvas conforme você foi registrando.)';
       status.style.color = 'var(--accent)';
       document.getElementById('f-obs').value = '';
