@@ -1,1 +1,10 @@
 .mcp.json
+node_modules
+dist
+
+# impeccable skill scratch/working artifacts (decision-round state, mocks, seed dumps)
+.impeccable/mocks/
+.impeccable/questions/
+.impeccable/decision-direction.json
+.impeccable/seed-direction.txt
+.impeccable/design-notes.md

@@ -1,0 +1,2592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Treino">
+  <meta name="theme-color" content="#0f1115">
+<title>Tracker de Treino</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #171a21;
+    --card-border: #262b36;
+    --accent: #4fd1c5;
+    --accent-dim: #2c7a72;
+    --text: #e7e9ee;
+    --text-dim: #9aa3b2;
+    --danger: #e57373;
+    --warn: #f0b429;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 12px;
+    padding-bottom: 80px;
+  }
+  h1 { font-size: 18px; margin: 0 0 2px; }
+  .sub { color: var(--text-dim); font-size: 12px; margin-bottom: 14px; }
+  .tabs {
+    display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto;
+    position: sticky; top: 0; background: var(--bg); padding: 6px 0; z-index: 10;
+  }
+  .tab {
+    padding: 9px 14px; border-radius: 20px; background: var(--card);
+    border: 1px solid var(--card-border); color: var(--text-dim);
+    cursor: pointer; font-size: 13px; white-space: nowrap; flex-shrink: 0;
+  }
+  .tab.active { background: var(--accent-dim); color: white; border-color: var(--accent); }
+  .subtab {
+    padding: 9px 14px; border-radius: 20px; background: var(--card);
+    border: 1px solid var(--card-border); color: var(--text-dim);
+    cursor: pointer; font-size: 13px; white-space: nowrap; flex-shrink: 0; flex: 1; text-align: center;
+  }
+  .subtab.active { background: var(--accent-dim); color: white; border-color: var(--accent); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .subpanel { display: none; }
+  .subpanel.active { display: block; }
+  .card {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 16px; margin-bottom: 12px;
+  }
+  .card h3 { margin: 0 0 10px; font-size: 15px; color: var(--accent); }
+  .card h4 { margin: 14px 0 6px; font-size: 13px; color: var(--text); }
+  label { display: block; font-size: 12px; color: var(--text-dim); margin: 10px 0 4px; }
+  input, select, textarea {
+    width: 100%; padding: 12px 10px; border-radius: 10px;
+    border: 1px solid var(--card-border); background: #0d0f14;
+    color: var(--text); font-size: 16px;
+  }
+  textarea { resize: vertical; min-height: 50px; font-size: 14px; }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+  button {
+    padding: 12px 18px; border-radius: 10px; border: none;
+    background: var(--accent); color: #05201d; font-weight: 700;
+    cursor: pointer; font-size: 15px;
+  }
+  button.secondary { background: transparent; border: 1px solid var(--card-border); color: var(--text-dim); font-weight: 500; }
+  button.big { width: 100%; padding: 16px; font-size: 17px; margin-top: 8px; }
+  button:disabled { opacity: 0.4; }
+  .empty { color: var(--text-dim); font-size: 13px; text-align: center; padding: 20px; }
+
+  /* Stepper */
+  .stepper { display: flex; align-items: center; gap: 8px; }
+  .stepper button {
+    width: 48px; height: 48px; border-radius: 12px; font-size: 20px;
+    background: #0d0f14; border: 1px solid var(--card-border); color: var(--accent); flex-shrink: 0;
+  }
+  .stepper .val {
+    flex: 1; text-align: center; font-size: 22px; font-weight: 700;
+    background: #0d0f14; border-radius: 12px; padding: 10px 0; border: 1px solid var(--card-border);
+  }
+
+  /* Exercise card in workout mode */
+  .exercise-card { border-left: 3px solid var(--accent-dim); }
+  .exercise-card.done { border-left-color: var(--accent); opacity: 0.75; }
+  .ex-title { display: flex; justify-content: space-between; align-items: center; }
+  .ex-title .name { font-size: 15px; font-weight: 700; }
+  .ex-title .meta { font-size: 11px; color: var(--text-dim); }
+  .suggestion {
+    background: #10201d; border: 1px solid var(--accent-dim); border-radius: 8px;
+    padding: 8px 10px; font-size: 12px; color: var(--accent); margin: 8px 0;
+  }
+  .set-log { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+  .set-log .chip {
+    display: inline-block; background: #0d0f14; border-radius: 6px;
+    padding: 3px 8px; margin: 2px 4px 2px 0; border: 1px solid var(--card-border);
+  }
+  .link-cue { font-size: 12px; color: var(--accent); text-decoration: underline; cursor: pointer; }
+
+  /* Rest timer */
+  .rest-timer {
+    position: fixed; bottom: 0; left: 0; right: 0; background: var(--accent);
+    color: #05201d; padding: 14px 16px; display: none; align-items: center;
+    justify-content: space-between; z-index: 100; font-weight: 700;
+  }
+  .rest-timer.active { display: flex; }
+  .rest-timer .n { font-size: 22px; }
+  .rest-timer button { background: rgba(0,0,0,0.15); color: #05201d; }
+
+  .entry { border-left: 3px solid var(--accent-dim); padding: 8px 12px; margin-bottom: 8px; background: #10131a; border-radius: 6px; font-size: 13px; position: relative; }
+  .entry .date { color: var(--accent); font-weight: 600; font-size: 12px; }
+  .entry .type { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin-left: 8px; }
+  .type-musc { background: #3a4a6b; color: #cdd8f0; }
+  .type-corrida { background: #4a3a2f; color: #f0d8bc; }
+  .type-mob { background: #2f4a3a; color: #bcf0d0; }
+  .type-desc { background: #4a2f3a; color: #f0bccc; }
+  .entry .del { position: absolute; top: 8px; right: 10px; color: var(--danger); cursor: pointer; font-size: 12px; }
+
+  .stat-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat { flex: 1; min-width: 80px; background: #0d0f14; border-radius: 8px; padding: 10px; text-align: center; }
+  .stat .n { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .stat .l { font-size: 10px; color: var(--text-dim); }
+
+  #status { font-size: 12px; color: var(--text-dim); margin-top: 8px; min-height: 16px; }
+
+  .week-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .week-table th, .week-table td { text-align: left; padding: 8px; border-bottom: 1px solid var(--card-border); }
+  .week-table th { color: var(--text-dim); font-weight: 500; }
+
+  .grade { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 8px; margin-left: 6px; font-weight: 700; }
+  .grade-forte { background: #1e4a2f; color: #7fe8a0; }
+  .grade-moderada { background: #4a3f1e; color: #f0c96b; }
+  .grade-fraca { background: #4a1e1e; color: #f08b8b; }
+
+  details { background: #0d0f14; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--card-border); }
+  summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+  details p, details ul { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+  details ul { padding-left: 18px; }
+
+  .drop-zone {
+    border: 2px dashed var(--card-border); border-radius: 12px; padding: 28px 16px;
+    text-align: center; color: var(--text-dim); font-size: 13px; margin-bottom: 12px;
+  }
+  .drop-zone.hover { border-color: var(--accent); color: var(--accent); }
+  .cat-header { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); margin: 18px 0 8px; }
+
+  .qmark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 17px; height: 17px; border-radius: 50%; background: var(--card-border);
+    color: var(--text-dim); font-size: 11px; font-weight: 700; cursor: pointer;
+    margin-left: 5px; vertical-align: middle; user-select: none;
+  }
+  .qmark:active { background: var(--accent-dim); color: white; }
+
+  .glossary-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 200; align-items: flex-end; justify-content: center;
+  }
+  .glossary-overlay.active { display: flex; }
+  .glossary-box {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 16px 16px 0 0; padding: 20px; width: 100%; max-width: 480px;
+    animation: slideUp 0.15s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .glossary-box h3 { margin: 0 0 8px; color: var(--accent); font-size: 16px; }
+  .glossary-box p { font-size: 14px; line-height: 1.5; color: var(--text); margin: 0 0 14px; }
+  .glossary-box button { width: 100%; }
+</style>
+</head>
+<body>
+
+<h1>Tracker de Treino</h1>
+<div class="sub">Musculação · Corrida · Mobilidade — registro e progressão</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="hoje">Hoje</div>
+  <div class="tab" data-tab="garmin">Importar Garmin</div>
+  <div class="tab" data-tab="biblioteca">Biblioteca</div>
+  <div class="tab" data-tab="historico">Histórico</div>
+  <div class="tab" data-tab="plano">Plano</div>
+</div>
+
+<!-- ===================== HOJE ===================== -->
+<div class="panel active" id="hoje">
+  <div class="tabs" style="position:static;padding:0;margin-bottom:12px;">
+    <div class="subtab active" data-subtab="hoje-treino">🏋️ Treino</div>
+    <div class="subtab" data-subtab="hoje-alimentacao">🍽️ Alimentação</div>
+  </div>
+
+  <!-- ---- SUB-ABA: TREINO ---- -->
+  <div class="subpanel active" id="hoje-treino">
+    <div class="card">
+      <label>Sessão de hoje</label>
+      <select id="day-select"></select>
+    </div>
+
+    <div id="workout-area"></div>
+
+    <div class="card" id="finalizar-card" style="display:none;">
+      <label>Sono na noite anterior (h)</label>
+      <input type="number" step="0.5" id="f-sono">
+      <label>Observações da sessão (dor, dificuldade, sensação — uso isso pra sugerir ajustes)</label>
+      <textarea id="f-obs" placeholder="Ex: joelho doeu levemente no agachamento, treino pareceu mais pesado que o normal..."></textarea>
+      <button class="big" onclick="encerrarTreino()">Encerrar treino</button>
+      <div id="status"></div>
+    </div>
+  </div>
+
+  <!-- ---- SUB-ABA: ALIMENTAÇÃO ---- -->
+  <div class="subpanel" id="hoje-alimentacao">
+    <div class="card">
+      <h3>Peso corporal</h3>
+      <p style="font-size:13px;color:var(--text-dim);">Pese-se 2x/semana, mesma hora, mesma condição (ex: em jejum, ao acordar). O que importa é a tendência de 2-3 semanas, não o dia isolado.</p>
+      <div class="row">
+        <div>
+          <label>Data</label>
+          <input type="date" id="peso-data">
+        </div>
+        <div>
+          <label>Peso (kg)</label>
+          <input type="number" step="0.1" id="peso-valor" placeholder="Ex: 85.2">
+        </div>
+      </div>
+      <button class="big" onclick="salvarPeso()">Registrar peso</button>
+      <div id="peso-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
+      <div id="peso-chart-area" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>Meta nutricional de hoje</h3>
+      <div class="stat-grid">
+        <div class="stat"><div class="n">~3050</div><div class="l">kcal</div></div>
+        <div class="stat"><div class="n">170g</div><div class="l">Proteína</div></div>
+        <div class="stat"><div class="n">490g</div><div class="l">Carboidrato</div></div>
+        <div class="stat"><div class="n">85g</div><div class="l">Gordura</div></div>
+      </div>
+      <h4>Regras gerais</h4>
+      <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+        <li>Não existe "janela anabólica" rígida — o total do dia importa muito mais que o horário exato.</li>
+        <li>Creatina: 3–5g todo dia (inclusive em dias de descanso).</li>
+        <li>Cafeína: 3–6mg/kg, 30–60min antes do treino/corrida, se tolerar.</li>
+        <li>Hidratação: perder mais de 2% do peso em água prejudica desempenho — beba antes de sentir sede.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Importar refeição rápido</h3>
+      <p style="font-size:13px;color:var(--text-dim);">Cole aqui o código que o Claude te passar no chat depois de calcular sua refeição por foto — preenche tudo sozinho.</p>
+      <textarea id="quick-import-input" placeholder="cafe|Banana 127g, aveia 62g, whey 25g|22|82|5|" style="min-height:60px;"></textarea>
+      <button class="big" onclick="aplicarImportacaoRapida()">Aplicar</button>
+      <div id="quick-import-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
+    </div>
+
+    <div class="card">
+      <h3>Progresso de hoje</h3>
+      <div class="stat-grid" id="alimentacao-progresso"></div>
+      <div class="cat-header" style="margin:14px 0 6px;">Falta para a meta</div>
+      <div class="stat-grid" id="alimentacao-faltando"></div>
+    </div>
+
+    <div class="card">
+      <h3>Calculadora de porções</h3>
+      <p style="font-size:13px;color:var(--text-dim);">Valores de referência aproximados — variam por marca e modo de preparo. Use como estimativa, não como precisão de laboratório.</p>
+
+      <h4>Modo 1 — "Preciso de X gramas de proteína, quanto eu como?"</h4>
+      <label>Alimento</label>
+      <select id="calc-food-select"></select>
+      <label>Meta de proteína para essa refeição (g)</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+        <button class="secondary" style="padding:6px 10px;font-size:12px;" onclick="document.getElementById('calc-prot-alvo').value=35">35g (café)</button>
+        <button class="secondary" style="padding:6px 10px;font-size:12px;" onclick="document.getElementById('calc-prot-alvo').value=40">40g (almoço/jantar)</button>
+        <button class="secondary" style="padding:6px 10px;font-size:12px;" onclick="document.getElementById('calc-prot-alvo').value=25">25g (lanche)</button>
+      </div>
+      <input type="number" id="calc-prot-alvo" placeholder="Ex: 35">
+      <button class="big" onclick="calcularPorProteina()">Calcular quantidade</button>
+      <div id="calc-resultado"></div>
+
+      <h4 style="margin-top:20px;">Modo 2 — "Vou comer X gramas, quanto isso dá?"</h4>
+      <label>Alimento</label>
+      <select id="calc-food-select-2"></select>
+      <label>Quantidade que você vai comer</label>
+      <input type="number" id="calc-qtd" placeholder="Ex: 150">
+      <button class="big" onclick="calcularPorQuantidade()">Calcular macros</button>
+      <div id="calc-resultado-2"></div>
+    </div>
+
+    <div id="refeicoes-area"></div>
+  </div>
+</div>
+
+<!-- ===================== GARMIN ===================== -->
+<div class="panel" id="garmin">
+  <div class="card">
+    <h3>Como exportar do Garmin Connect</h3>
+    <details open>
+      <summary>Passo a passo (primeira vez)</summary>
+      <ul>
+        <li>Abra o app <strong>Garmin Connect</strong> (ou connect.garmin.com no navegador).</li>
+        <li>Toque na atividade de corrida que você quer importar.</li>
+        <li>No app: toque no ícone de engrenagem/compartilhar no canto superior direito → <strong>"Exportar para TCX"</strong> (no site, é o ícone de engrenagem na página da atividade → Exportar TCX).</li>
+        <li>O arquivo .TCX vai para a pasta de Downloads (Android) ou app Arquivos (iPhone).</li>
+        <li>Volte aqui e toque em "Escolher arquivo" abaixo, selecionando o .TCX exportado.</li>
+      </ul>
+      <p>Se só tiver .GPX, também funciona — a frequência cardíaca pode não vir completa dependendo do relógio.</p>
+    </details>
+  </div>
+
+  <div class="card">
+    <h3>Importar arquivo (TCX<span class="qmark" onclick="abrirGlossario('tcx')">?</span> / GPX<span class="qmark" onclick="abrirGlossario('gpx')">?</span>)</h3>
+    <div class="drop-zone" id="drop-zone">
+      📄 Toque para escolher o arquivo .TCX ou .GPX exportado do Garmin
+    </div>
+    <input type="file" id="file-input" accept=".tcx,.gpx,.xml" style="display:none">
+    <div id="garmin-preview"></div>
+  </div>
+</div>
+
+<!-- ===================== BIBLIOTECA ===================== -->
+<div class="panel" id="biblioteca">
+  <div id="biblioteca-content"></div>
+</div>
+
+<!-- ===================== HISTORICO ===================== -->
+<div class="panel" id="historico">
+  <div class="card">
+    <h3>Resumo</h3>
+    <div class="stat-grid" id="stats"></div>
+  </div>
+  <div class="card">
+    <h3>Análise automática</h3>
+    <p style="font-size:13px;color:var(--text-dim);">Analisa seus últimos registros e observações (dor, dificuldade, sono) e sugere ajustes de carga, corrida ou deload.</p>
+    <button class="big" onclick="analisarSemana()">🧠 Analisar meus últimos registros</button>
+    <div id="analise-resultado"></div>
+  </div>
+  <div class="card">
+    <h3>Últimos registros</h3>
+    <div id="lista"></div>
+  </div>
+</div>
+
+<!-- ===================== PLANO ===================== -->
+<div class="panel" id="plano">
+  <div class="card">
+    <h3>Estrutura semanal fixa</h3>
+    <table class="week-table">
+      <tr><th>Dia</th><th>Sessão</th><th>Foco</th></tr>
+      <tr><td>Segunda</td><td>Musculação A</td><td>Perna (quadríceps) + empurrar</td></tr>
+      <tr><td>Terça</td><td>Corrida Z1 + mobilidade curta</td><td>Base aeróbia</td></tr>
+      <tr><td>Quarta</td><td>Musculação B</td><td>Posterior de cadeia + puxar</td></tr>
+      <tr><td>Quinta</td><td>Mobilidade dedicada MMII<span class="qmark" onclick="abrirGlossario('mmii')">?</span></td><td>Alongamento + descanso ativo</td></tr>
+      <tr><td>Sexta</td><td>Musculação C</td><td>Full body complementar</td></tr>
+      <tr><td>Sábado</td><td>Corrida (variação)</td><td>Tempo / fartlek</td></tr>
+      <tr><td>Domingo</td><td>Corrida longa + mobilidade leve</td><td>Longão Z1–Z2</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h3>Metas nutricionais</h3>
+    <div class="stat-grid">
+      <div class="stat"><div class="n">~3050</div><div class="l">kcal/dia</div></div>
+      <div class="stat"><div class="n">170g</div><div class="l">Proteína</div></div>
+      <div class="stat"><div class="n">490g</div><div class="l">Carboidrato</div></div>
+      <div class="stat"><div class="n">85g</div><div class="l">Gordura</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Regra de ouro</h3>
+    <p style="font-size:13px; color:var(--text-dim); line-height:1.5;">
+      Não alongar estático >60s antes de força/potência. Se juntar força e corrida no mesmo dia, força primeiro.
+      Progrida carga quando bater o topo da faixa de reps com técnica limpa. Deload<span class="qmark" onclick="abrirGlossario('deload')">?</span> a cada 4 semanas se sentir fadiga acumulada.
+    </p>
+  </div>
+</div>
+
+<div class="rest-timer" id="rest-timer">
+  <span><span id="rest-label">Descanso</span>: <span class="n" id="rest-n">90</span>s</span>
+  <button onclick="pularDescanso()">Pular</button>
+</div>
+
+<div class="glossary-overlay" id="glossary-overlay" onclick="if(event.target===this) fecharGlossario()">
+  <div class="glossary-box">
+    <h3 id="glossary-title">Termo</h3>
+    <p id="glossary-text">Definição.</p>
+    <button onclick="fecharGlossario()">Entendi</button>
+  </div>
+</div>
+
+<script>
+/* ============ DADOS DO PROGRAMA ============ */
+const PROGRAM = {
+  A: { label: "Musculação A — Perna + empurrar", exercicios: [
+    { id: "agachamento", nome: "Agachamento livre", sets: 4, repMin: 8, repMax: 10, rest: 150, inc: 5, cue: "musc-agachamento", principal: true },
+    { id: "supino", nome: "Supino reto", sets: 3, repMin: 8, repMax: 12, rest: 120, inc: 2.5, cue: "musc-supino", principal: true },
+    { id: "cadeiraflexora", nome: "Cadeira flexora (alongada)", sets: 3, repMin: 10, repMax: 15, rest: 90, inc: 2.5, cue: "musc-cadeiraflexora" },
+    { id: "desenvolvimento", nome: "Desenvolvimento c/ halteres", sets: 3, repMin: 10, repMax: 12, rest: 90, inc: 2.5, cue: "musc-desenvolvimento" },
+    { id: "panturrilha1", nome: "Panturrilha em pé", sets: 3, repMin: 12, repMax: 15, rest: 60, inc: 2.5, cue: "musc-panturrilha" },
+    { id: "prancha", nome: "Prancha", sets: 3, isTime: true, rest: 60, cue: "musc-core" }
+  ]},
+  B: { label: "Musculação B — Posterior + puxar", exercicios: [
+    { id: "rdl", nome: "Levantamento terra romeno (RDL)", sets: 4, repMin: 8, repMax: 10, rest: 150, inc: 5, cue: "musc-rdl", principal: true },
+    { id: "puxada", nome: "Puxada frente / remada curvada", sets: 4, repMin: 8, repMax: 12, rest: 120, inc: 2.5, cue: "musc-puxada", principal: true },
+    { id: "afundo", nome: "Afundo / passada", sets: 3, repMin: 10, repMax: 12, rest: 90, inc: 2.5, cue: "musc-afundo" },
+    { id: "remadabaixa", nome: "Remada baixa", sets: 3, repMin: 10, repMax: 12, rest: 90, inc: 2.5, cue: "musc-remada" },
+    { id: "elevacaolateral", nome: "Elevação lateral", sets: 3, repMin: 12, repMax: 15, rest: 60, inc: 1, cue: "musc-elevacaolateral" },
+    { id: "pallof", nome: "Pallof press (core rotacional)", sets: 3, repMin: 12, repMax: 12, rest: 60, inc: 0, cue: "musc-core" }
+  ]},
+  C: { label: "Musculação C — Full body complementar", exercicios: [
+    { id: "legpress", nome: "Leg press / hack squat", sets: 4, repMin: 10, repMax: 12, rest: 120, inc: 10, cue: "musc-legpress", principal: true },
+    { id: "supinoinclinado", nome: "Supino inclinado", sets: 3, repMin: 8, repMax: 12, rest: 120, inc: 2.5, cue: "musc-supino", principal: true },
+    { id: "hipthrust", nome: "Hip thrust / stiff unilateral", sets: 3, repMin: 10, repMax: 12, rest: 120, inc: 5, cue: "musc-hipthrust" },
+    { id: "puxadasupinada", nome: "Puxada supinada", sets: 3, repMin: 10, repMax: 12, rest: 90, inc: 2.5, cue: "musc-puxada" },
+    { id: "panturrilha2", nome: "Panturrilha sentado", sets: 3, repMin: 15, repMax: 15, rest: 60, inc: 2.5, cue: "musc-panturrilha" },
+    { id: "abdominal", nome: "Abdominal livre", sets: 3, repMin: 15, repMax: 15, rest: 60, inc: 0, cue: "musc-core" }
+  ]},
+  mobilidade: { label: "Circuito de estabilidade e core", exercicios: [
+    { id: "prancha2", nome: "Prancha", sets: 3, isTime: true, rest: 45, cue: "musc-core" },
+    { id: "pallof2", nome: "Pallof press", sets: 3, repMin: 12, repMax: 12, rest: 45, inc: 0, cue: "musc-core" },
+    { id: "abducaoquadril", nome: "Abdução de quadril (banda ou máquina)", sets: 3, repMin: 15, repMax: 20, rest: 45, inc: 2.5, cue: null },
+    { id: "hipthrustunilateral", nome: "Hip thrust unilateral", sets: 3, repMin: 10, repMax: 12, rest: 60, inc: 2.5, cue: "musc-hipthrust" },
+    { id: "panturrilhaextra", nome: "Panturrilha em pé", sets: 2, repMin: 15, repMax: 15, rest: 45, inc: 2.5, cue: "musc-panturrilha" }
+  ]}
+};
+
+const DAY_TO_TYPE = { 0: "corrida", 1: "A", 2: "corrida", 3: "B", 4: "mobilidade", 5: "C", 6: "corrida" };
+const DAY_NAMES = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+
+/* ============ BIBLIOTECA DE EXECUÇÃO ============ */
+/* ============ ESQUEMAS VISUAIS (SVG) ============ */
+let diagramCounter = 0;
+function toggleImgDiagram(uid) {
+  const el = document.getElementById(uid);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+function acaoImagemVideo(svgContent, termo) {
+  const uid = 'diag-' + (diagramCounter++);
+  const q = encodeURIComponent(termo + " execução técnica");
+  const qVid = `https://www.youtube.com/results?search_query=${q}`;
+  return `
+    <div id="${uid}" style="display:none;">${svgContent}</div>
+    <div style="display:flex;gap:8px;margin:8px 0;">
+      <div style="flex:1;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--card-border);font-size:12px;color:var(--accent);cursor:pointer;" onclick="toggleImgDiagram('${uid}')">🔍 Ver imagens</div>
+      <a href="${qVid}" target="_blank" rel="noopener" style="flex:1;text-decoration:none;">
+        <div style="text-align:center;padding:8px;border-radius:8px;border:1px solid var(--card-border);font-size:12px;color:var(--accent);">▶️ Ver vídeo</div>
+      </a>
+    </div>`;
+}
+
+/* ============ ARMAZENAMENTO (Supabase — versão web publicada) ============ */
+const SUPA_URL = "https://wcarxggugedqzfredmdd.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjYXJ4Z2d1Z2VkcXpmcmVkbWRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTgzNTEsImV4cCI6MjEwMzQzNDM1MX0.KFa565es3VGduwNIBHOMj93dfTlPoPlFE_XWvnj5frU";
+
+function supaTableFor(key) {
+  if (key.startsWith('log:')) return 'logs';
+  if (key.startsWith('meal:')) return 'meals';
+  if (key.startsWith('lastset:')) return 'lastset';
+  return 'misc_kv';
+}
+function supaHeaders(extra) {
+  return Object.assign({ apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY }, extra || {});
+}
+
+const storage = {
+  async get(key) {
+    const table = supaTableFor(key);
+    const url = `${SUPA_URL}/rest/v1/${table}?key=eq.${encodeURIComponent(key)}&select=value`;
+    const res = await fetch(url, { headers: supaHeaders() });
+    if (!res.ok) throw new Error('Storage get failed: ' + res.status);
+    const rows = await res.json();
+    if (!rows.length) return null;
+    return { key, value: JSON.stringify(rows[0].value), shared: false };
+  },
+  async set(key, value) {
+    const table = supaTableFor(key);
+    const parsed = JSON.parse(value);
+    const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: supaHeaders({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify({ key, value: parsed, updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error('Storage set failed: ' + res.status);
+    return { key, value, shared: false };
+  },
+  async delete(key) {
+    const table = supaTableFor(key);
+    const res = await fetch(`${SUPA_URL}/rest/v1/${table}?key=eq.${encodeURIComponent(key)}`, {
+      method: 'DELETE', headers: supaHeaders()
+    });
+    if (!res.ok) throw new Error('Storage delete failed: ' + res.status);
+    return { key, deleted: true, shared: false };
+  },
+  async list(prefix) {
+    const table = supaTableFor(prefix || '');
+    const params = new URLSearchParams({ select: 'key' });
+    if (prefix) params.set('key', `like.${prefix}*`);
+    const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${params.toString()}`, { headers: supaHeaders() });
+    if (!res.ok) throw new Error('Storage list failed: ' + res.status);
+    const rows = await res.json();
+    return { keys: rows.map(r => r.key), prefix, shared: false };
+  }
+};
+
+/* ============ REABRIR "APP" NA TELA DE INICIO (iOS) ============
+   No iOS, o app adicionado a Tela de Inicio (modo standalone) costuma
+   ficar suspenso em segundo plano em vez de recarregar — reabrir só
+   "acorda" a página antiga, sem buscar dados novos do Supabase. Isso
+   força uma recarga sempre que o app volta a ficar visível. */
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted) location.reload();
+});
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible') location.reload();
+});
+
+const SVG_ACCENT = "#4fd1c5";
+const SVG_ACCENT_DIM = "#2c7a72";
+const SVG_DIM = "#9aa3b2";
+
+function limb(x1, y1, x2, y2, color, width) {
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${width || 8}" stroke-linecap="round"/>`;
+}
+function jointDots(points, color) {
+  return points.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${color}"/>`).join('');
+}
+function arrowSvg(x1, y1, x2, y2, color) {
+  const ang = Math.atan2(y2 - y1, x2 - x1);
+  const ah = 6;
+  const ax1 = x2 - ah * Math.cos(ang - Math.PI / 6), ay1 = y2 - ah * Math.sin(ang - Math.PI / 6);
+  const ax2 = x2 - ah * Math.cos(ang + Math.PI / 6), ay2 = y2 - ah * Math.sin(ang + Math.PI / 6);
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="2"/>
+    <polygon points="${x2},${y2} ${ax1},${ay1} ${ax2},${ay2}" fill="${color}"/>`;
+}
+function barbellIcon(cx, cy, color) {
+  color = color || SVG_DIM;
+  const w = 32;
+  return `<line x1="${cx - w}" y1="${cy}" x2="${cx + w}" y2="${cy}" stroke="${color}" stroke-width="4" stroke-linecap="round"/>
+    <rect x="${cx - w - 6}" y="${cy - 11}" width="9" height="22" rx="2" fill="${color}"/>
+    <rect x="${cx + w - 3}" y="${cy - 11}" width="9" height="22" rx="2" fill="${color}"/>`;
+}
+function dumbbellIcon(cx, cy, color) {
+  color = color || SVG_DIM;
+  return `<line x1="${cx - 10}" y1="${cy}" x2="${cx + 10}" y2="${cy}" stroke="${color}" stroke-width="3"/>
+    <circle cx="${cx - 10}" cy="${cy}" r="6" fill="${color}"/>
+    <circle cx="${cx + 10}" cy="${cy}" r="6" fill="${color}"/>`;
+}
+function benchRect(x, y, w, color) {
+  color = color || SVG_DIM;
+  return `<rect x="${x}" y="${y}" width="${w}" height="9" rx="4" fill="${color}" opacity="0.55"/>`;
+}
+function wallRect(x, yTop, yBottom, color) {
+  color = color || SVG_DIM;
+  return `<rect x="${x}" y="${yTop}" width="7" height="${yBottom - yTop}" rx="3" fill="${color}" opacity="0.55"/>`;
+}
+function figure(j, color, limbColor) {
+  limbColor = limbColor || color;
+  let s = '';
+  // pernas (atrás do tronco)
+  s += limb(j.hip[0], j.hip[1], j.knee[0], j.knee[1], limbColor, 9);
+  s += limb(j.knee[0], j.knee[1], j.ankle[0], j.ankle[1], limbColor, 9);
+  s += limb(j.ankle[0], j.ankle[1], j.toe[0], j.toe[1], limbColor, 6);
+  if (j.knee2) {
+    s += limb(j.hip[0], j.hip[1], j.knee2[0], j.knee2[1], limbColor, 9);
+    s += limb(j.knee2[0], j.knee2[1], j.ankle2[0], j.ankle2[1], limbColor, 9);
+    s += limb(j.ankle2[0], j.ankle2[1], j.toe2[0], j.toe2[1], limbColor, 6);
+  }
+  // tronco (mais grosso, cor principal)
+  s += limb(j.shoulder[0], j.shoulder[1], j.hip[0], j.hip[1], color, 15);
+  // braço
+  s += limb(j.shoulder[0], j.shoulder[1], j.elbow[0], j.elbow[1], limbColor, 8);
+  s += limb(j.elbow[0], j.elbow[1], j.hand[0], j.hand[1], limbColor, 8);
+  // cabeça (preenchida, sem contorno fino)
+  s += `<circle cx="${j.head[0]}" cy="${j.head[1]}" r="11" fill="${color}"/>`;
+  // articulações marcadas (dá o efeito "boneco robusto", não palito)
+  s += jointDots([j.shoulder, j.elbow, j.hip, j.knee, j.ankle], color);
+  if (j.knee2) s += jointDots([j.knee2, j.ankle2], color);
+  // mãos e pés arredondados
+  s += `<circle cx="${j.hand[0]}" cy="${j.hand[1]}" r="6" fill="${limbColor}"/>`;
+  s += `<circle cx="${j.toe[0]}" cy="${j.toe[1]}" r="5" fill="${limbColor}"/>`;
+  if (j.toe2) s += `<circle cx="${j.toe2[0]}" cy="${j.toe2[1]}" r="5" fill="${limbColor}"/>`;
+  return s;
+}
+function shiftJ(j, dx) {
+  const out = {};
+  for (const k in j) out[k] = [j[k][0] + dx, j[k][1]];
+  return out;
+}
+function diagram2(startJ, endJ, label1, label2, extras) {
+  return `<svg viewBox="0 0 300 155" style="width:100%;max-width:300px;display:block;margin:10px auto;background:#0d0f14;border-radius:12px;">
+    <line x1="10" y1="138" x2="132" y2="138" stroke="${SVG_DIM}" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <line x1="168" y1="138" x2="290" y2="138" stroke="${SVG_DIM}" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    ${figure(startJ, SVG_ACCENT, SVG_ACCENT_DIM)}
+    ${figure(shiftJ(endJ, 160), SVG_ACCENT, SVG_ACCENT_DIM)}
+    ${extras || ''}
+    <text x="69" y="150" fill="${SVG_DIM}" font-size="10" text-anchor="middle">${label1}</text>
+    <text x="229" y="150" fill="${SVG_DIM}" font-size="10" text-anchor="middle">${label2}</text>
+  </svg>`;
+}
+function diagram1(j, label, extras) {
+  return `<svg viewBox="0 0 160 155" style="width:100%;max-width:190px;display:block;margin:10px auto;background:#0d0f14;border-radius:12px;">
+    <line x1="10" y1="138" x2="150" y2="138" stroke="${SVG_DIM}" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    ${figure(j, SVG_ACCENT, SVG_ACCENT_DIM)}
+    ${extras || ''}
+    <text x="80" y="150" fill="${SVG_DIM}" font-size="10" text-anchor="middle">${label}</text>
+  </svg>`;
+}
+
+const STAND = { head: [65, 20], shoulder: [65, 38], elbow: [52, 58], hand: [45, 80], hip: [65, 75], knee: [65, 105], ankle: [65, 130], toe: [80, 130] };
+
+const DIAGRAMS = {
+  // ---- MOBILIDADE (prioridade) ----
+  "mob-protocolo": `<svg viewBox="0 0 100 100" style="width:90px;display:block;margin:10px auto;">
+      <circle cx="50" cy="55" r="35" fill="none" stroke="${SVG_ACCENT}" stroke-width="4"/>
+      <line x1="50" y1="55" x2="50" y2="30" stroke="${SVG_ACCENT}" stroke-width="3"/>
+      <line x1="50" y1="55" x2="68" y2="60" stroke="${SVG_ACCENT}" stroke-width="3"/>
+      <line x1="35" y1="10" x2="65" y2="10" stroke="${SVG_ACCENT}" stroke-width="4"/>
+      <line x1="50" y1="10" x2="50" y2="20" stroke="${SVG_ACCENT}" stroke-width="4"/>
+      <text x="50" y="98" fill="${SVG_DIM}" font-size="11" text-anchor="middle">30–60 segundos</text>
+    </svg>`,
+  "mob-quadril": "",
+  "mob-isquio": diagram1({
+    head: [50, 82], shoulder: [58, 95], elbow: [92, 100], hand: [125, 106],
+    hip: [40, 122], knee: [90, 124], ankle: [133, 126], toe: [144, 120]
+  }, "Dobrar pelo quadril, joelho quase reto", arrowSvg(65, 108, 70, 120, SVG_ACCENT)),
+  "mob-adutor": diagram1({
+    head: [58, 76], shoulder: [64, 90], elbow: [84, 100], hand: [98, 108],
+    hip: [60, 120], knee: [98, 108], ankle: [78, 124], toe: [66, 128]
+  }, "Joelho caindo para o lado, coluna neutra", arrowSvg(98, 103, 98, 118, SVG_ACCENT)),
+  "mob-tornozelo": diagram1({
+    head: [70, 40], shoulder: [75, 55], elbow: [102, 50], hand: [132, 45],
+    hip: [70, 85], knee: [98, 106], ankle: [108, 130], toe: [122, 130],
+    knee2: [40, 120], ankle2: [30, 132], toe2: [15, 132]
+  }, "Calcanhar de trás sempre no chão", wallRect(138, 15, 138) + arrowSvg(40, 108, 34, 122, SVG_ACCENT)),
+
+  // ---- CORRIDA ----
+  "corrida-postura": `<svg viewBox="0 0 300 150" style="width:100%;max-width:300px;display:block;margin:10px auto;">
+      <line x1="4" y1="130" x2="146" y2="130" stroke="${SVG_DIM}" stroke-width="1"/>
+      <line x1="154" y1="130" x2="296" y2="130" stroke="${SVG_DIM}" stroke-width="1"/>
+      ${figure({ head: [35, 18], shoulder: [35, 32], elbow: [28, 45], hand: [22, 55], hip: [35, 58], knee: [72, 72], ankle: [105, 92], toe: [118, 88], knee2: [15, 72], ankle2: [5, 92], toe2: [-5, 88] }, "#e57373")}
+      ${figure(shiftJ({ head: [35, 15], shoulder: [33, 28], elbow: [42, 40], hand: [52, 50], hip: [35, 55], knee: [50, 75], ankle: [53, 92], toe: [64, 88], knee2: [20, 78], ankle2: [10, 95], toe2: [0, 92] }, 160), "#7fe8a0")}
+      <text x="75" y="142" fill="#e57373" font-size="10" text-anchor="middle">Errado: pé longe à frente</text>
+      <text x="235" y="142" fill="#7fe8a0" font-size="10" text-anchor="middle">Certo: pé sob o quadril</text>
+    </svg>`,
+
+  // ---- MUSCULAÇÃO ----
+  "musc-agachamento": "",
+  "musc-rdl": "",
+  "musc-hipthrust": diagram2(
+    { head: [22, 85], shoulder: [35, 100], elbow: [35, 110], hand: [45, 115], hip: [68, 118], knee: [105, 108], ankle: [105, 133], toe: [120, 133] },
+    { head: [22, 85], shoulder: [35, 100], elbow: [35, 110], hand: [45, 115], hip: [75, 92], knee: [105, 100], ankle: [105, 133], toe: [120, 133] },
+    "Quadril baixo", "Quadril estendido (linha reta)",
+    benchRect(15, 100, 30, SVG_DIM) + barbellIcon(68, 112, SVG_DIM) + benchRect(175, 100, 30, SVG_DIM) + barbellIcon(235, 86, SVG_DIM)),
+  "musc-cadeiraflexora": diagram2(
+    { head: [30, 30], shoulder: [30, 48], elbow: [20, 60], hand: [15, 75], hip: [30, 80], knee: [68, 80], ankle: [108, 80], toe: [120, 70] },
+    { head: [30, 30], shoulder: [30, 48], elbow: [20, 60], hand: [15, 75], hip: [30, 80], knee: [68, 80], ankle: [80, 112], toe: [68, 122] },
+    "Início: perna estendida (alongada)", "Final: joelho flexionado"),
+  "musc-supino": diagram2(
+    { head: [15, 90], shoulder: [35, 90], elbow: [45, 68], hand: [50, 50], hip: [70, 90], knee: [95, 80], ankle: [95, 100], toe: [110, 100] },
+    { head: [15, 90], shoulder: [35, 90], elbow: [35, 58], hand: [35, 32], hip: [70, 90], knee: [95, 80], ankle: [95, 100], toe: [110, 100] },
+    "Barra na altura do peito", "Braços estendidos (sem travar)",
+    benchRect(8, 95, 100, SVG_DIM) + barbellIcon(50, 50, SVG_DIM) + benchRect(168, 95, 100, SVG_DIM) + barbellIcon(195, 32, SVG_DIM)),
+  "musc-puxada": diagram2(
+    { head: [100, 30], shoulder: [95, 48], elbow: [70, 50], hand: [42, 52], hip: [95, 85], knee: [95, 110], ankle: [95, 132], toe: [110, 132] },
+    { head: [100, 30], shoulder: [95, 48], elbow: [82, 55], hand: [96, 62], hip: [95, 85], knee: [95, 110], ankle: [95, 132], toe: [110, 132] },
+    "Braços estendidos (alongado)", "Puxado até o tronco"),
+  "musc-remada": diagram2(
+    { head: [105, 35], shoulder: [98, 52], elbow: [72, 55], hand: [45, 58], hip: [92, 88], knee: [92, 112], ankle: [92, 132], toe: [107, 132] },
+    { head: [105, 35], shoulder: [98, 52], elbow: [85, 58], hand: [100, 64], hip: [92, 88], knee: [92, 112], ankle: [92, 132], toe: [107, 132] },
+    "Tronco fixo, leve inclinação à frente", "Cotovelos atrás, aperta escápulas"),
+  "musc-afundo": diagram2(STAND,
+    { head: [58, 45], shoulder: [58, 60], elbow: [48, 75], hand: [42, 90], hip: [58, 80], knee: [85, 105], ankle: [95, 130], toe: [110, 130], knee2: [38, 115], ankle2: [24, 135], toe2: [12, 140] },
+    "Em pé", "Joelho da frente a 90°, o de trás baixo"),
+  "musc-elevacaolateral": diagram2(STAND,
+    { head: [65, 20], shoulder: [65, 38], elbow: [92, 38], hand: [115, 36], hip: [65, 75], knee: [65, 105], ankle: [65, 130], toe: [80, 130] },
+    "Braços ao lado do corpo", "Elevado até a linha dos ombros",
+    dumbbellIcon(45, 80, SVG_DIM) + dumbbellIcon(275, 36, SVG_DIM)),
+  "musc-legpress": diagram2(
+    { head: [20, 55], shoulder: [30, 66], elbow: [25, 82], hand: [20, 94], hip: [45, 82], knee: [72, 66], ankle: [98, 48], toe: [108, 42] },
+    { head: [20, 55], shoulder: [30, 66], elbow: [25, 82], hand: [20, 94], hip: [45, 82], knee: [88, 78], ankle: [128, 72], toe: [138, 66] },
+    "Joelhos flexionados (~90°)", "Pernas quase estendidas (sem travar)"),
+  "musc-desenvolvimento": diagram2(
+    { head: [65, 25], shoulder: [65, 42], elbow: [88, 45], hand: [104, 56], hip: [65, 78], knee: [65, 108], ankle: [65, 130], toe: [80, 130] },
+    { head: [65, 25], shoulder: [65, 42], elbow: [76, 18], hand: [86, 4], hip: [65, 78], knee: [65, 108], ankle: [65, 130], toe: [80, 130] },
+    "Halteres na altura dos ombros", "Braços estendidos acima da cabeça",
+    dumbbellIcon(104, 56, SVG_DIM) + dumbbellIcon(246, 4, SVG_DIM)),
+  "musc-panturrilha": diagram2(
+    { head: [65, 20], shoulder: [65, 38], elbow: [60, 55], hand: [58, 75], hip: [65, 75], knee: [65, 105], ankle: [65, 128], toe: [80, 128] },
+    { head: [65, 10], shoulder: [65, 28], elbow: [60, 46], hand: [58, 66], hip: [65, 66], knee: [65, 96], ankle: [70, 116], toe: [80, 128] },
+    "Calcanhar no chão", "Ponta do pé (contração de pico)"),
+  "musc-core": diagram1(
+    { head: [15, 60], shoulder: [32, 62], elbow: [32, 82], hand: [32, 97], hip: [70, 65], knee: [108, 68], ankle: [135, 70], toe: [146, 68] },
+    "Linha reta da cabeça ao calcanhar")
+};
+
+const LIBRARY = {
+  mobilidade: {
+    label: "Mobilidade e Alongamento (MMII)",
+    items: [
+      { id: "mob-protocolo", nome: "Protocolo geral de alongamento", grade: "moderada",
+        exec: [
+          "Holds estáticos de 30–60 segundos por região, 2–3 séries.",
+          "Sessão dedicada: 20–25 min, foco em quadril, isquiotibiais, adutores e tornozelo.",
+          "Sessões curtas (5–10 min) de mobilidade dinâmica antes de treino/corrida — nunca estático longo antes de força/potência."
+        ],
+        erros: ["Fazer alongamento estático >60s antes de agachar ou correr forte (reduz força aguda).", "Forçar até dor aguda — o alvo é desconforto leve a moderado, não dor."],
+        evidencia: "Warneke et al. (2024, Sports Medicine – Open): efeitos maiores com >1,5h de volume semanal e holds de 15–60s. Warneke et al. (2024, JSHS): holds ≥60s antes de esforço reduzem força (ES −0,84); holds <60s têm efeito trivial." },
+      { id: "mob-quadril", nome: "Flexor de quadril", grade: "moderada",
+        exec: [
+          "Posição de afundo baixo (joelho de trás no chão), quadril empurrado à frente até sentir alongamento na frente do quadril da perna de trás.",
+          "Mantenha tronco ereto, não deixe a lombar arquear excessivamente.",
+          "30–60s por lado, 2–3 séries."
+        ],
+        erros: ["Compensar com arqueamento lombar em vez de projetar o quadril."],
+        evidencia: "Relevante para corredores e para amplitude do agachamento — Seção 3 e 11 do relatório." },
+      { id: "mob-isquio", nome: "Isquiotibiais", grade: "moderada",
+        exec: [
+          "Sentado ou em pé, perna estendida à frente, dobre o tronco a partir do quadril (não da lombar) até sentir alongamento atrás da coxa.",
+          "Mantenha leve flexão de joelho se sentir tensão excessiva atrás do joelho.",
+          "30–60s por lado, 2–3 séries."
+        ],
+        erros: ["Arredondar a lombar em vez de dobrar pelo quadril."],
+        evidencia: "Contribui para amplitude do RDL e economia de corrida — Seção 3." },
+      { id: "mob-adutor", nome: "Adutores", grade: "moderada",
+        exec: [
+          "Posição de agachamento sumô ou borboleta sentado, joelhos abertos.",
+          "Incline levemente o tronco à frente mantendo coluna neutra até sentir alongamento na virilha.",
+          "30–60s, 2–3 séries."
+        ],
+        erros: [], evidencia: "Complementa amplitude de quadril para agachamento e mudança de direção." },
+      { id: "mob-tornozelo", nome: "Panturrilha / dorsiflexão de tornozelo", grade: "moderada",
+        exec: [
+          "Em pé, mãos na parede, um pé atrás, calcanhar no chão, empurre o joelho da frente em direção à parede.",
+          "Repita com o joelho de trás levemente flexionado para atingir o sóleo.",
+          "30–60s por lado e por variação, 2–3 séries."
+        ],
+        erros: ["Levantar o calcanhar do chão, que anula o alongamento."],
+        evidencia: "Dorsiflexão de tornozelo é limitante comum em agachamento profundo e cadência de corrida — Seção 11." },
+      { id: "mob-aquecimento-articular", nome: "Aquecimento articular (círculos)", grade: "moderada",
+        exec: [
+          "Quadril: pés afastados na largura dos ombros, mãos na cintura, faça círculos amplos levando o quadril para frente-lado-trás-lado. 10 círculos por direção.",
+          "Joelho: pés juntos, leve flexão de quadril, mãos apoiadas nos joelhos, círculos suaves. 10 círculos por direção.",
+          "Tornozelo: apoie-se numa perna só (ou sente-se), eleve a outra do chão e gire o pé pelo tornozelo, desenhando o maior círculo possível. 10 círculos por direção, por lado."
+        ],
+        erros: ["Fazer os círculos rápido demais — o objetivo é amplitude, não velocidade.", "Mover o joelho/quadril junto no exercício de tornozelo, quando só o pé deveria girar."],
+        evidencia: "Aquecimento dinâmico antes de esforço ou alongamento estático, elevando temperatura e amplitude articular sem o efeito negativo do alongamento estático longo pré-esforço — Seção 11." },
+      { id: "mob-cars-quadril", nome: "CARs de quadril (mobilidade ativa)", grade: "fraca",
+        exec: [
+          "Em pé, apoie a mão numa parede ou cadeira para equilíbrio.",
+          "Eleve o joelho à frente até a altura do quadril, mantendo o tronco parado (sem compensar com a lombar).",
+          "Sem perder essa postura, abra o joelho para o lado (rotação externa do quadril).",
+          "Continue o movimento circular levando o joelho para trás e depois de volta à posição inicial — um círculo completo e controlado.",
+          "5 repetições por direção (sentido horário e anti-horário), por lado."
+        ],
+        erros: ["Compensar com rotação do tronco ou da lombar em vez de mover isoladamente a articulação do quadril.", "Fazer rápido — o valor está no controle lento em cada ponto da amplitude."],
+        evidencia: "Mobilidade ativa em amplitude final tem racional plausível (controle ativo da amplitude, diferente do alongamento passivo), mas evidência ainda emergente — Seção 11." },
+      { id: "mob-cars-tornozelo", nome: "CARs de tornozelo (mobilidade ativa)", grade: "fraca",
+        exec: [
+          "Sentado ou em pé com apoio, eleve o pé do chão, perna parada.",
+          "Gire o tornozelo desenhando o maior círculo possível com os dedos do pé, mantendo a perna/joelho imóveis.",
+          "Metade das repetições em cada direção, movimento lento e controlado.",
+          "8–10 repetições por direção, por lado."
+        ],
+        erros: ["Mover o joelho ou a perna toda em vez de isolar o tornozelo."],
+        evidencia: "Mesmo racional dos CARs de quadril — controle ativo em amplitude final, evidência emergente (Seção 11)." },
+      { id: "mob-foam-roller", nome: "Foam roller (panturrilha, quadríceps, posterior)", grade: "moderada",
+        exec: [
+          "Posicione o rolo sob o músculo-alvo (panturrilha, quadríceps ou posterior de coxa) e apoie o peso do corpo sobre ele.",
+          "Role lentamente (cerca de 2–3 cm por segundo) ao longo de todo o músculo, da origem até a inserção.",
+          "Ao encontrar um ponto mais sensível ou tenso, pause ali por 20–30s até a tensão reduzir, sem forçar além do desconforto tolerável.",
+          "Evite rolar diretamente sobre articulações ou ossos (joelho, tíbia).",
+          "1–2 minutos por região."
+        ],
+        erros: ["Rolar rápido demais — o tecido precisa de tempo para responder.", "Aplicar pressão a ponto de sentir dor aguda, não apenas desconforto."],
+        evidencia: "Ganhos agudos de ROM sem perda de força associada; evidência crônica ainda limitada (Seção 5 e 11)." }
+    ]
+  },
+  corrida: {
+    label: "Corrida",
+    items: [
+      { id: "corrida-postura", nome: "Postura e cadência", grade: "forte",
+        exec: [
+          "Tronco ligeiramente inclinado à frente a partir do tornozelo (não da cintura), olhar no horizonte.",
+          "Se notar 'passada longa' (pé aterrissando muito à frente do corpo), aumente a cadência em 5–10%.",
+          "Braços relaxados, cotovelo ~90°, movimento para frente/trás, não cruzando o corpo."
+        ],
+        erros: ["Overstriding (passada longa à frente do centro de massa) — aumenta carga em joelho e quadril."],
+        evidencia: "Heiderscheit et al. (2011, MSSE) e Lenhart et al. (2014, MSSE): cadência a 110% da preferida reduziu força patelofemoral de pico em 14%. FORTE." },
+      { id: "corrida-zonas", nome: "Zonas de treino (Z1–Z5)", grade: "forte",
+        exec: [
+          "Z1 (base): ritmo em que dá pra conversar frases inteiras sem ofegar — é a maior parte do seu volume agora.",
+          "Z2: conversa com esforço, frases curtas.",
+          "Z3 (tempo/limiar): desconfortável mas sustentável, poucas palavras por vez.",
+          "Z4–Z5: intervalos curtos e intensos — só depois de ter base aeróbia construída."
+        ],
+        erros: ["Correr toda sessão fácil em ritmo Z3 'porque sim' — isso atrapalha a recuperação sem ganho extra."],
+        evidencia: "Seção 3: distribuição polarizada é levemente superior para VO2max em treinados/intervenções curtas (Rosenblat et al., 2022), mas para sua fase o mais importante é construir base Z1." },
+      { id: "corrida-respiracao", nome: "Respiração", grade: "fraca",
+        exec: [
+          "Respiração nasal/bucal combinada em ritmos fáceis; puramente bucal em intensidades mais altas.",
+          "Padrão 3:3 (3 passos inspirando, 3 expirando) em Z1–Z2 ajuda muitos iniciantes a manter ritmo constante — ajuste conforme conforto."
+        ],
+        erros: [], evidencia: "Evidência sobre padrões específicos de respiração é fraca; use como ferramenta prática, não regra rígida." },
+      { id: "corrida-progressao", nome: "Progressão de volume segura", grade: "forte",
+        exec: [
+          "Aumente o tempo/distância total semanal gradualmente — evite saltos abruptos.",
+          "Priorize semanas consecutivas de base Z1 antes de introduzir intervalos de tempo/limiar.",
+          "Se sentir dor articular (não apenas cansaço muscular), reduza o volume antes de aumentar."
+        ],
+        erros: ["Aumentar volume e intensidade ao mesmo tempo."],
+        evidencia: "Impellizzeri et al. (2020): índices como ACWR têm falhas conceituais; a evidência favorece progressão gradual e julgamento, não uma fórmula rígida." }
+    ]
+  },
+  musculacao: {
+    label: "Musculação",
+    items: [
+      { id: "musc-agachamento", nome: "Agachamento livre", grade: "forte",
+        exec: [
+          "Pés na largura dos ombros, levemente rotacionados para fora.",
+          "Desça controlando o quadril para trás e para baixo, mantendo o peso distribuído no pé todo (não só na ponta).",
+          "Desça até a profundidade que sua mobilidade de quadril/tornozelo permitir com a lombar neutra — quanto mais fundo (sem perder a postura), melhor o estímulo em posição alongada.",
+          "Suba empurrando o chão, joelhos alinhados com os pés (não colapsando para dentro)."
+        ],
+        erros: ["Joelhos colapsando para dentro (valgo).", "Perder a lordose lombar no fundo do movimento — sinal de mobilidade insuficiente, prefira parar um pouco acima."],
+        evidencia: "Treinar em amplitude longa (posição alongada) favorece hipertrofia (Seção 1 e 11). FORTE para o mecanismo de tensão mecânica." },
+      { id: "musc-rdl", nome: "Levantamento terra romeno (RDL)", grade: "forte",
+        exec: [
+          "Barra próxima ao corpo, joelhos com flexão leve e fixa durante todo o movimento.",
+          "Desça a barra deslizando pela coxa, dobrando pelo quadril (quadril vai para trás), até sentir alongamento forte no posterior de coxa.",
+          "Mantenha a coluna neutra o tempo todo — não arredonde a lombar.",
+          "Suba estendendo o quadril, sem hiperextender no topo."
+        ],
+        erros: ["Dobrar os joelhos em vez do quadril (vira um agachamento).", "Arredondar a lombar para 'chegar mais embaixo'."],
+        evidencia: "Exercício-chave para treino em posição alongada do posterior de coxa — Seção 1 (curvas de resistência) e Seção 11." },
+      { id: "musc-hipthrust", nome: "Hip thrust", grade: "moderada",
+        exec: [
+          "Costas apoiadas no banco na altura da escápula, barra sobre o quadril (com almofada).",
+          "Pés próximos ao quadril, empurre o quadril para cima até o corpo formar linha reta do ombro ao joelho.",
+          "Aperte o glúteo no topo por 1s, desça controlado."
+        ],
+        erros: ["Hiperestender a lombar no topo em vez de terminar o movimento com o glúteo."],
+        evidencia: "Complementa o RDL trabalhando extensão de quadril em amplitude diferente." },
+      { id: "musc-cadeiraflexora", nome: "Cadeira flexora (ênfase alongada)", grade: "moderada",
+        exec: [
+          "Ajuste o banco para que o joelho fique alinhado ao eixo do aparelho.",
+          "Estenda bem o quadril/joelho no início do movimento para começar em posição alongada do isquiotibial.",
+          "Flexione controlado, sem impulso, apertando no fim do curso."
+        ],
+        erros: ["Usar impulso do quadril para 'ajudar' a subida do peso."],
+        evidencia: "Wolf et al. (2025, PeerJ): treino em maior comprimento muscular favorece hipertrofia (ES 0,283)." },
+      { id: "musc-supino", nome: "Supino (reto/inclinado)", grade: "forte",
+        exec: [
+          "Escápulas retraídas e depressas contra o banco, leve arco natural na lombar.",
+          "Desça a barra/halteres até tocar levemente o peito (reto) ou linha do peitoral superior (inclinado) — amplitude completa.",
+          "Empurre para cima em linha levemente diagonal, sem travar os cotovelos com força excessiva."
+        ],
+        erros: ["Cortar a amplitude no fundo do movimento por medo — isso reduz o estímulo em posição alongada."],
+        evidencia: "ROM completo maximiza tensão mecânica em posição alongada — Seção 1." },
+      { id: "musc-puxada", nome: "Puxada frente / remada curvada", grade: "moderada",
+        exec: [
+          "Puxada: leve inclinação de tronco para trás, puxe a barra até a altura do peito, cotovelos para baixo e para trás.",
+          "Remada: tronco fixo (não balançar), puxe até o abdômen, apertando as escápulas no final.",
+          "Controle a fase excêntrica (voltar) em vez de deixar o peso cair."
+        ],
+        erros: ["Usar embalo do corpo para puxar mais peso do que a musculatura das costas sustenta."],
+        evidencia: "Volume adequado de puxada é essencial para equilíbrio postural com o trabalho de empurrar — Seção 2." },
+      { id: "musc-remada", nome: "Remada baixa (cabo)", grade: "moderada",
+        exec: [
+          "Tronco ereto, leve inclinação à frente no início do movimento (alongamento das costas).",
+          "Puxe o cabo até o abdômen, cotovelos próximos ao corpo, aperte as escápulas.",
+          "Retorne controlado, permitindo alongamento completo antes da próxima repetição."
+        ], erros: [], evidencia: "" },
+      { id: "musc-afundo", nome: "Afundo / passada", grade: "moderada",
+        exec: [
+          "Passo à frente (ou atrás, no reverso), desça até os dois joelhos formarem ~90°.",
+          "Mantenha o tronco ereto e o joelho da frente alinhado com o pé.",
+          "Empurre de volta à posição inicial usando principalmente a perna da frente."
+        ],
+        erros: ["Deixar o joelho da frente ultrapassar muito a ponta do pé de forma descontrolada (não é proibido, mas exige controle)."],
+        evidencia: "" },
+      { id: "musc-elevacaolateral", nome: "Elevação lateral", grade: "moderada",
+        exec: [
+          "Halteres ao lado do corpo, leve flexão de cotovelo fixa.",
+          "Eleve até a linha dos ombros, liderando com o cotovelo (não com a mão).",
+          "Desça controlado — a fase excêntrica é onde mais se ganha estímulo."
+        ], erros: ["Usar embalo do tronco para jogar o peso para cima."], evidencia: "" },
+      { id: "musc-legpress", nome: "Leg press / hack squat", grade: "moderada",
+        exec: [
+          "Pés na largura dos ombros na plataforma, levemente mais altos para enfatizar posterior/glúteo, mais baixos para quadríceps.",
+          "Desça até o joelho formar ~90° ou até onde a lombar permanecer apoiada no banco.",
+          "Não trave os joelhos com força total no topo."
+        ], erros: ["Descer além do ponto em que o quadril começa a 'arredondar' contra o banco."], evidencia: "" },
+      { id: "musc-desenvolvimento", nome: "Desenvolvimento com halteres", grade: "moderada",
+        exec: [
+          "Sentado ou em pé, halteres na altura dos ombros, cotovelos levemente à frente do corpo.",
+          "Empurre para cima até quase estender o cotovelo, sem travar com força.",
+          "Desça controlado até a altura inicial."
+        ], erros: ["Arquear excessivamente a lombar para 'ajudar' a subida."], evidencia: "" },
+      { id: "musc-panturrilha", nome: "Panturrilha (em pé / sentado)", grade: "moderada",
+        exec: [
+          "Amplitude completa: desça até sentir alongamento forte no calcanhar, suba até a ponta do pé máxima.",
+          "Pausa breve no topo (contração de pico).",
+          "Em pé enfatiza gastrocnêmio; sentado (joelho flexionado) enfatiza sóleo — inclua ambos ao longo da semana."
+        ], erros: ["Cortar a amplitude, fazendo reps parciais rápidas."], evidencia: "" },
+      { id: "musc-core", nome: "Core (prancha / pallof / abdominal)", grade: "moderada",
+        exec: [
+          "Prancha: cotovelos sob os ombros, corpo em linha reta da cabeça ao calcanhar, sem deixar o quadril cair ou subir.",
+          "Pallof press: em pé, cabo/elástico na altura do peito, empurre à frente resistindo à rotação do tronco.",
+          "Abdominal: movimento controlado, sem puxar o pescoço com as mãos."
+        ], erros: ["Prender a respiração durante toda a série."], evidencia: "" }
+    ]
+  }
+};
+
+/* ============ GLOSSÁRIO ============ */
+const GLOSSARY = {
+  rir: { titulo: "RIR — Repetições em Reserva", texto: "Quantas repetições você ainda conseguiria fazer antes de falhar. Se você para uma série com RIR 2, significa que ainda tinha 2 repetições 'de gás no tanque'. RIR 0 = falha total (não consegue fazer mais nenhuma). É uma forma de estimar a intensidade da série sem precisar ir até a falha toda vez." },
+  rpe: { titulo: "RPE — Percepção de Esforço", texto: "Parecido com o RIR, mas numa escala geral de esforço (1 a 10, sendo 10 o máximo possível). Costuma ser usado para a sessão inteira (ex: 'essa corrida foi um RPE 7'), não série por série." },
+  um_rm: { titulo: "1RM — Uma Repetição Máxima", texto: "A carga máxima que você consegue levantar em UMA repetição só, com técnica correta. Não é necessário testar isso na prática (é arriscado); dá pra estimar matematicamente a partir do peso e das repetições que você já faz." },
+  deload: { titulo: "Deload", texto: "Uma semana de treino 'mais leve' de propósito — menos peso e/ou menos séries — pra permitir recuperação antes de continuar progredindo. Faz parte do plano, não é pausa por preguiça." },
+  mmii: { titulo: "MMII", texto: "Abreviação de 'membros inferiores': pernas, incluindo quadril, coxa, panturrilha e tornozelo. Termo comum em educação física e fisioterapia." },
+  rom: { titulo: "ROM — Amplitude de Movimento", texto: "O quanto uma articulação se move do início ao fim do movimento. 'Fazer o agachamento em ROM completo' significa descer e subir usando toda a amplitude que sua mobilidade permite, sem cortar o movimento pela metade." },
+  zona: { titulo: "Zonas de treino (Z1–Z5)", texto: "Faixas de intensidade da corrida, da mais fácil (Z1) até esforço máximo (Z5), geralmente medidas pela frequência cardíaca. Z1: dá pra conversar frases inteiras. Z2: conversa com esforço. Z3: desconfortável mas sustentável. Z4–Z5: intervalos curtos e intensos." },
+  fc: { titulo: "FC — Frequência Cardíaca", texto: "Batimentos do coração por minuto (bpm). É o dado que o relógio Garmin mede continuamente durante a atividade." },
+  gpx: { titulo: "GPX — GPS Exchange Format", texto: "Um tipo de arquivo que guarda o trajeto de GPS de uma atividade: latitude, longitude e horário de cada ponto. É um formato genérico, usado por vários apps de GPS, não só Garmin. Às vezes vem sem frequência cardíaca." },
+  tcx: { titulo: "TCX — Training Center XML", texto: "Um formato parecido com o GPX, criado pela própria Garmin. Além do trajeto, também guarda dados de treino como frequência cardíaca, calorias e 'voltas' (laps). Por isso costuma vir mais completo — é o formato recomendado para importar aqui." }
+};
+
+function abrirGlossario(id) {
+  const item = GLOSSARY[id];
+  if (!item) return;
+  document.getElementById('glossary-title').textContent = item.titulo;
+  document.getElementById('glossary-text').textContent = item.texto;
+  document.getElementById('glossary-overlay').classList.add('active');
+}
+function fecharGlossario() {
+  document.getElementById('glossary-overlay').classList.remove('active');
+}
+
+/* ============ ALIMENTAÇÃO POR REFEIÇÃO ============ */
+/* ============ CALCULADORA DE PORÇÕES ============ */
+// valores de referência aproximados (podem variar por marca/preparo) — kcal, proteína, carboidrato, gordura
+const FOODS = [
+  { nome: "Peito de frango cozido/grelhado", base: 100, unidade: "g", kcal: 165, prot: 31, carb: 0, gord: 3.6 },
+  { nome: "Carne bovina magra (patinho)", base: 100, unidade: "g", kcal: 143, prot: 26, carb: 0, gord: 4 },
+  { nome: "Tilápia", base: 100, unidade: "g", kcal: 96, prot: 20, carb: 0, gord: 1.7 },
+  { nome: "Salmão", base: 100, unidade: "g", kcal: 208, prot: 20, carb: 0, gord: 13 },
+  { nome: "Ovo inteiro (unidade ~50g)", base: 1, unidade: "unidade", kcal: 78, prot: 6.3, carb: 0.6, gord: 5.3 },
+  { nome: "Clara de ovo", base: 100, unidade: "g", kcal: 52, prot: 11, carb: 0.7, gord: 0.2 },
+  { nome: "Whey protein (1 scoop ~30g)", base: 1, unidade: "scoop", kcal: 120, prot: 24, carb: 3, gord: 1.5 },
+  { nome: "Iogurte grego natural", base: 100, unidade: "g", kcal: 59, prot: 10, carb: 3.6, gord: 0.4 },
+  { nome: "Queijo cottage", base: 100, unidade: "g", kcal: 98, prot: 11, carb: 3.4, gord: 4.3 },
+  { nome: "Tofu firme", base: 100, unidade: "g", kcal: 144, prot: 15.5, carb: 2.8, gord: 8.7 },
+  { nome: "Arroz branco cozido", base: 100, unidade: "g", kcal: 130, prot: 2.7, carb: 28, gord: 0.3 },
+  { nome: "Arroz integral cozido", base: 100, unidade: "g", kcal: 123, prot: 2.6, carb: 25.6, gord: 1 },
+  { nome: "Batata doce cozida", base: 100, unidade: "g", kcal: 86, prot: 1.6, carb: 20, gord: 0.1 },
+  { nome: "Batata inglesa cozida", base: 100, unidade: "g", kcal: 87, prot: 1.9, carb: 20, gord: 0.1 },
+  { nome: "Aveia em flocos (crua)", base: 100, unidade: "g", kcal: 389, prot: 16.9, carb: 66, gord: 6.9 },
+  { nome: "Pão francês (unidade ~50g)", base: 1, unidade: "unidade", kcal: 150, prot: 4, carb: 28, gord: 1.5 },
+  { nome: "Pão integral (fatia ~25g)", base: 1, unidade: "fatia", kcal: 65, prot: 3, carb: 12, gord: 1 },
+  { nome: "Macarrão cozido", base: 100, unidade: "g", kcal: 131, prot: 5, carb: 25, gord: 1.1 },
+  { nome: "Feijão cozido", base: 100, unidade: "g", kcal: 76, prot: 4.8, carb: 13.6, gord: 0.5 },
+  { nome: "Lentilha cozida", base: 100, unidade: "g", kcal: 116, prot: 9, carb: 20, gord: 0.4 },
+  { nome: "Grão de bico cozido", base: 100, unidade: "g", kcal: 164, prot: 8.9, carb: 27.4, gord: 2.6 },
+  { nome: "Azeite de oliva (1 colher sopa)", base: 1, unidade: "colher", kcal: 119, prot: 0, carb: 0, gord: 13.5 },
+  { nome: "Pasta de amendoim", base: 100, unidade: "g", kcal: 588, prot: 25, carb: 20, gord: 50 },
+  { nome: "Abacate", base: 100, unidade: "g", kcal: 160, prot: 2, carb: 8.5, gord: 14.7 },
+  { nome: "Banana", base: 100, unidade: "g", kcal: 89, prot: 1.1, carb: 22.8, gord: 0.3 },
+  { nome: "Leite integral", base: 100, unidade: "ml", kcal: 61, prot: 3.2, carb: 4.8, gord: 3.3 },
+  { nome: "Leite desnatado", base: 100, unidade: "ml", kcal: 35, prot: 3.4, carb: 5, gord: 0.1 },
+  { nome: "Whey Black Skull (seu produto, rótulo real)", base: 30, unidade: "g", kcal: 114, prot: 12, carb: 14, gord: 0.7 }
+];
+
+function populateFoodSelect(selectId) {
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = FOODS.map((f, i) => `<option value="${i}">${f.nome}</option>`).join('');
+}
+
+function calcularPorProteina() {
+  const idx = document.getElementById('calc-food-select').value;
+  const alvoProteina = parseFloat(document.getElementById('calc-prot-alvo').value);
+  const resultado = document.getElementById('calc-resultado');
+  if (isNaN(alvoProteina) || alvoProteina <= 0) {
+    resultado.innerHTML = '<p style="color:var(--danger);font-size:13px;">Digite uma meta de proteína válida.</p>';
+    return;
+  }
+  const food = FOODS[idx];
+  if (food.prot === 0) {
+    resultado.innerHTML = '<p style="color:var(--danger);font-size:13px;">Esse alimento não tem proteína — escolha outro pra essa conta.</p>';
+    return;
+  }
+  const quantidade = (alvoProteina / food.prot) * food.base;
+  const fator = quantidade / food.base;
+  const kcal = food.kcal * fator;
+  const carb = food.carb * fator;
+  const gord = food.gord * fator;
+  resultado.innerHTML = `
+    <div class="suggestion" style="margin-top:10px;">
+const date = hojeStr();      fornece aproximadamente: <strong>${alvoProteina.toFixed(0)}g proteína</strong> · ${kcal.toFixed(0)}kcal · ${carb.toFixed(1)}g carb · ${gord.toFixed(1)}g gordura
+    </div>`;
+}
+
+function calcularPorQuantidade() {
+  const idx = document.getElementById('calc-food-select-2').value;
+  const qtd = parseFloat(document.getElementById('calc-qtd').value);
+  const resultado = document.getElementById('calc-resultado-2');
+  if (isNaN(qtd) || qtd <= 0) {
+    resultado.innerHTML = '<p style="color:var(--danger);font-size:13px;">Digite uma quantidade válida.</p>';
+    return;
+  }
+  const food = FOODS[idx];
+  const fator = qtd / food.base;
+  resultado.innerHTML = `
+    <div class="suggestion" style="margin-top:10px;">
+      <strong>${qtd}${food.unidade === 'g' || food.unidade === 'ml' ? food.unidade : ' ' + food.unidade + (qtd >= 2 ? 's' : '')}</strong> de ${food.nome}<br>
+      fornece: <strong>${(food.kcal * fator).toFixed(0)}kcal</strong> · ${(food.prot * fator).toFixed(1)}g proteína · ${(food.carb * fator).toFixed(1)}g carb · ${(food.gord * fator).toFixed(1)}g gordura
+    </div>`;
+}
+
+const MEALS = [
+  { id: "cafe", nome: "Café da manhã", metaProteina: 35 },
+  { id: "almoco", nome: "Almoço", metaProteina: 40 },
+  { id: "lanche", nome: "Lanche da tarde", metaProteina: 25 },
+  { id: "jantar", nome: "Jantar", metaProteina: 40 },
+  { id: "ceia", nome: "Ceia (opcional)", metaProteina: 30, opcional: true,
+    dica: "~40g de proteína de digestão lenta (caseína, iogurte grego, queijo cottage) antes de dormir eleva a síntese proteica muscular overnight (Res et al., 2012)." }
+];
+
+function hojeStr() { const d = new Date(); if (d.getHours() < 4) { d.setDate(d.getDate() - 1); } return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+
+// Mesma regra de virada do dia (às 4h), mas pra um timestamp qualquer — usado
+// pra datar uma corrida importada do Garmin pelo horário real da atividade,
+// não pela data em que o arquivo foi importado.
+function dataDoTimestamp(isoStr) {
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return hojeStr();
+  if (d.getHours() < 4) { d.setDate(d.getDate() - 1); }
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+/* ============ PESO CORPORAL ============ */
+async function salvarPeso() {
+  const status = document.getElementById('peso-status');
+  const data = document.getElementById('peso-data').value || hojeStr();
+  const valor = parseFloat(document.getElementById('peso-valor').value);
+  if (!valor || valor <= 0) {
+    status.textContent = 'Digite um peso válido.';
+    status.style.color = 'var(--danger)';
+    return;
+  }
+  try {
+    await storage.set('weight:' + data, JSON.stringify({ date: data, peso: valor }));
+    status.textContent = '✓ Peso registrado.';
+    status.style.color = 'var(--accent)';
+    document.getElementById('peso-valor').value = '';
+    renderPesoChart();
+  } catch (e) {
+    status.textContent = 'Erro: ' + e.message;
+    status.style.color = 'var(--danger)';
+  }
+}
+
+async function renderPesoChart() {
+  const area = document.getElementById('peso-chart-area');
+  try {
+    const keysResult = await storage.list('weight:');
+    if (!keysResult || !keysResult.keys || keysResult.keys.length === 0) {
+      area.innerHTML = '<div class="empty" style="padding:10px;">Nenhuma pesagem registrada ainda.</div>';
+      return;
+    }
+    const entries = [];
+    for (const key of keysResult.keys) {
+      try {
+        const r = await storage.get(key);
+        if (r && r.value) entries.push(JSON.parse(r.value));
+      } catch (e) {}
+    }
+    entries.sort((a, b) => a.date.localeCompare(b.date));
+    const recentes = entries.slice(-14);
+
+    // tendência: média dos últimos 7 vs média dos 7 anteriores
+    let tendenciaHtml = '';
+    if (entries.length >= 4) {
+      const ultimos7 = entries.slice(-7);
+      const anteriores7 = entries.slice(-14, -7);
+      const media = arr => arr.reduce((s, e) => s + e.peso, 0) / arr.length;
+      const mediaUltimos = media(ultimos7);
+      if (anteriores7.length >= 2) {
+        const mediaAnteriores = media(anteriores7);
+        const delta = mediaUltimos - mediaAnteriores;
+        const sinal = delta > 0 ? '+' : '';
+        const cor = delta > 0 ? '#7fe8a0' : (delta < 0 ? '#f08b8b' : SVG_DIM);
+        tendenciaHtml = `<div class="suggestion" style="color:${cor};border-color:${cor};">Tendência: ${sinal}${delta.toFixed(2)}kg (média últimos ${ultimos7.length} vs ${anteriores7.length} anteriores)</div>`;
+      } else {
+        tendenciaHtml = `<div class="suggestion">Média recente: ${mediaUltimos.toFixed(1)}kg. Registre mais algumas semanas pra ver a tendência.</div>`;
+      }
+    }
+
+    // mini gráfico SVG
+    let chartHtml = '';
+    if (recentes.length >= 2) {
+      const pesos = recentes.map(e => e.peso);
+      const min = Math.min(...pesos), max = Math.max(...pesos);
+      const range = (max - min) || 1;
+      const w = 300, h = 100, pad = 10;
+      const stepX = (w - pad * 2) / (recentes.length - 1);
+      const points = recentes.map((e, i) => {
+        const x = pad + i * stepX;
+        const y = h - pad - ((e.peso - min) / range) * (h - pad * 2);
+        return [x, y];
+      });
+      const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      const dots = points.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${SVG_ACCENT}"/>`).join('');
+      chartHtml = `<svg viewBox="0 0 ${w} ${h}" style="width:100%;max-width:${w}px;display:block;margin:0 auto;background:#0d0f14;border-radius:10px;">
+        <path d="${pathD}" fill="none" stroke="${SVG_ACCENT}" stroke-width="2"/>
+        ${dots}
+        <text x="${pad}" y="${h - 2}" fill="${SVG_DIM}" font-size="9">${recentes[0].date.slice(5)}</text>
+        <text x="${w - pad - 30}" y="${h - 2}" fill="${SVG_DIM}" font-size="9">${recentes[recentes.length - 1].date.slice(5)}</text>
+      </svg>`;
+    }
+
+    const listaHtml = recentes.slice().reverse().map((e, idx, arr) => {
+      const anterior = arr[idx + 1];
+      let delta = '';
+      if (anterior) {
+        const d = e.peso - anterior.peso;
+        delta = d === 0 ? ' (=)' : (d > 0 ? ` (+${d.toFixed(1)})` : ` (${d.toFixed(1)})`);
+      }
+      return `<span class="chip">${e.date.slice(5)}: ${e.peso}kg${delta}</span>`;
+    }).join('');
+
+    area.innerHTML = chartHtml + tendenciaHtml + `<div class="set-log" style="margin-top:8px;">${listaHtml}</div>`;
+  } catch (e) {
+    area.innerHTML = `<div class="empty">Erro ao carregar peso: ${e.message}</div>`;
+  }
+}
+
+async function renderAlimentacao() {
+  const date = hojeStr();
+  const area = document.getElementById('refeicoes-area');
+  area.innerHTML = '<div class="empty">Carregando refeições...</div>';
+
+  const META_KCAL = 3050, META_PROT = 170, META_CARB = 490, META_GORD = 85;
+
+  const registros = {};
+  for (const meal of MEALS) {
+    try {
+      const r = await storage.get('meal:' + date + ':' + meal.id);
+      if (r && r.value) registros[meal.id] = JSON.parse(r.value);
+    } catch (e) {}
+  }
+
+  let totalProteina = 0, totalCarb = 0, totalGordura = 0, feitas = 0;
+  Object.values(registros).forEach(r => {
+    totalProteina += parseFloat(r.proteina) || 0;
+    totalCarb += parseFloat(r.carboidrato) || 0;
+    totalGordura += parseFloat(r.gordura) || 0;
+    feitas++;
+  });
+  const kcalEstimado = totalProteina * 4 + totalCarb * 4 + totalGordura * 9;
+
+  document.getElementById('alimentacao-progresso').innerHTML = `
+    <div class="stat"><div class="n">${feitas}/${MEALS.length}</div><div class="l">Refeições</div></div>
+    <div class="stat"><div class="n">${totalProteina.toFixed(0)}g</div><div class="l">Proteína</div></div>
+    <div class="stat"><div class="n">${totalCarb.toFixed(0)}g</div><div class="l">Carboidrato</div></div>
+    <div class="stat"><div class="n">${totalGordura.toFixed(0)}g</div><div class="l">Gordura</div></div>
+    <div class="stat"><div class="n">~${kcalEstimado.toFixed(0)}</div><div class="l">kcal estimado</div></div>
+  `;
+
+  const faltaKcal = Math.max(0, META_KCAL - kcalEstimado);
+  const faltaProt = Math.max(0, META_PROT - totalProteina);
+  const faltaCarb = Math.max(0, META_CARB - totalCarb);
+  const faltaGord = Math.max(0, META_GORD - totalGordura);
+
+  document.getElementById('alimentacao-faltando').innerHTML = `
+    <div class="stat"><div class="n">${faltaKcal.toFixed(0)}</div><div class="l">kcal</div></div>
+    <div class="stat"><div class="n">${faltaProt.toFixed(0)}g</div><div class="l">Proteína</div></div>
+    <div class="stat"><div class="n">${faltaCarb.toFixed(0)}g</div><div class="l">Carboidrato</div></div>
+    <div class="stat"><div class="n">${faltaGord.toFixed(0)}g</div><div class="l">Gordura</div></div>
+  `;
+
+  area.innerHTML = MEALS.map(meal => renderRefeicaoCard(meal, registros[meal.id])).join('');
+}
+
+function renderRefeicaoCard(meal, registro) {
+  const dica = meal.dica ? `<p style="font-size:12px;color:var(--text-dim);margin-top:6px;">${meal.dica}</p>` : '';
+  if (registro) {
+    return `
+      <div class="card exercise-card done" id="meal-card-${meal.id}">
+        <div class="ex-title">
+          <div>
+            <div class="name">✓ ${meal.nome}</div>
+            <div class="meta">Meta: ~${meal.metaProteina}g proteína · registrado às ${registro.hora || '-'}</div>
+          </div>
+        </div>
+        <div class="set-log" style="margin-top:6px;">
+          <span class="chip">${registro.proteina ? registro.proteina + 'g proteína' : 'sem estimativa'}</span>
+          ${registro.carboidrato ? `<span class="chip">${registro.carboidrato}g carbo</span>` : ''}
+          ${registro.gordura ? `<span class="chip">${registro.gordura}g gordura</span>` : ''}
+          ${registro.sensacao ? `<span class="chip">${registro.sensacao}</span>` : ''}
+        </div>
+        <div style="font-size:13px;color:var(--text-dim);margin-top:6px;">${escapeHtml(registro.descricao || '')}</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="secondary" style="flex:1;" onclick="abrirInputRefeicao('${meal.id}', true)">Editar</button>
+          <button class="secondary" style="flex:1;color:var(--danger);" onclick="apagarRefeicao('${meal.id}')">Apagar</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="card exercise-card" id="meal-card-${meal.id}">
+      <div class="ex-title">
+        <div>
+          <div class="name">${meal.nome}${meal.opcional ? ' (opcional)' : ''}</div>
+          <div class="meta">Meta: ~${meal.metaProteina}g proteína</div>
+        </div>
+      </div>
+      ${dica}
+      <div id="meal-input-${meal.id}"></div>
+      <button class="secondary" style="margin-top:10px;width:100%;" onclick="abrirInputRefeicao('${meal.id}')">+ Registrar refeição</button>
+    </div>`;
+}
+
+async function abrirInputRefeicao(mealId, editando) {
+  const container = document.getElementById(`meal-input-${mealId}`) || document.getElementById(`meal-card-${mealId}`);
+  let existente = {};
+  if (editando) {
+    try {
+      const r = await storage.get('meal:' + hojeStr() + ':' + mealId);
+      if (r && r.value) existente = JSON.parse(r.value);
+    } catch (e) {}
+  }
+  const formHtml = `
+    <div style="margin-top:10px;">
+      <label>O que você comeu?</label>
+      <textarea id="input-desc-${mealId}" placeholder="Ex: 200g frango, arroz, salada">${existente.descricao || ''}</textarea>
+      <div class="row">
+        <div>
+          <label>Proteína (g)</label>
+          <input type="number" id="input-prot-${mealId}" value="${existente.proteina || ''}">
+        </div>
+        <div>
+          <label>Carboidrato (g)</label>
+          <input type="number" id="input-carb-${mealId}" value="${existente.carboidrato || ''}">
+        </div>
+        <div>
+          <label>Gordura (g)</label>
+          <input type="number" id="input-gord-${mealId}" value="${existente.gordura || ''}">
+        </div>
+      </div>
+      <label>Como ficou depois</label>
+      <select id="input-sens-${mealId}">
+        <option value="">-- opcional --</option>
+        <option ${existente.sensacao === 'Satisfeito' ? 'selected' : ''}>Satisfeito</option>
+        <option ${existente.sensacao === 'Ainda com fome' ? 'selected' : ''}>Ainda com fome</option>
+        <option ${existente.sensacao === 'Empanturrado' ? 'selected' : ''}>Empanturrado</option>
+      </select>
+      <button class="big" onclick="salvarRefeicao('${mealId}')">Salvar refeição</button>
+    </div>`;
+  if (editando) {
+    document.getElementById(`meal-card-${mealId}`).insertAdjacentHTML('beforeend', formHtml);
+  } else {
+    container.innerHTML = formHtml;
+  }
+}
+
+async function salvarRefeicao(mealId) {
+  const descricao = document.getElementById(`input-desc-${mealId}`).value || '';
+  const proteina = document.getElementById(`input-prot-${mealId}`).value || null;
+  const carboidrato = document.getElementById(`input-carb-${mealId}`).value || null;
+  const gordura = document.getElementById(`input-gord-${mealId}`).value || null;
+  const sensacao = document.getElementById(`input-sens-${mealId}`).value || '';
+  const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const ts = new Date().toISOString(); // timestamp exato — dá pra cruzar com FC/atividade do Garmin depois
+  const date = hojeStr();
+
+  try {
+    await storage.set('meal:' + date + ':' + mealId, JSON.stringify({ descricao, proteina, carboidrato, gordura, sensacao, hora, ts, date, mealId }));
+    renderAlimentacao();
+  } catch (e) {
+    alert('Erro ao salvar refeição: ' + e.message);
+  }
+}
+
+async function apagarRefeicao(mealId) {
+  try {
+    await storage.delete('meal:' + hojeStr() + ':' + mealId);
+    renderAlimentacao();
+  } catch (e) {}
+}
+
+async function aplicarImportacaoRapida() {
+  const status = document.getElementById('quick-import-status');
+  const raw = document.getElementById('quick-import-input').value.trim();
+  if (!raw) { status.textContent = 'Cole o código primeiro.'; status.style.color = 'var(--danger)'; return; }
+
+  const partes = raw.split('|').map(p => p.trim());
+  const [mealId, descricao, proteina, carboidrato, gordura, sensacao] = partes;
+
+  const mealValido = MEALS.find(m => m.id === mealId);
+  if (!mealValido) {
+    status.textContent = `Refeição "${mealId}" não reconhecida. Use: ${MEALS.map(m => m.id).join(', ')}.`;
+    status.style.color = 'var(--danger)';
+    return;
+  }
+  if (!descricao) {
+    status.textContent = 'Formato inválido. Use: refeicao|descrição|proteína|carboidrato|gordura|sensação(opcional)';
+    status.style.color = 'var(--danger)';
+    return;
+  }
+
+  const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const ts = new Date().toISOString();
+  const date = hojeStr();
+
+  try {
+    await storage.set('meal:' + date + ':' + mealId, JSON.stringify({
+      descricao, proteina: proteina || null, carboidrato: carboidrato || null, gordura: gordura || null,
+      sensacao: sensacao || '', hora, ts, date, mealId
+    }));
+    status.textContent = `✓ "${mealValido.nome}" preenchida automaticamente.`;
+    status.style.color = 'var(--accent)';
+    document.getElementById('quick-import-input').value = '';
+    renderAlimentacao();
+  } catch (e) {
+    status.textContent = 'Erro ao aplicar: ' + e.message;
+    status.style.color = 'var(--danger)';
+  }
+}
+
+/* ============ ESTADO ============ */
+let sessionSets = {}; // { exerciseId: [ {weight, reps, rir/time} ] }
+let currentDayType = null;
+let restInterval = null;
+
+// Sessão de treino guiada (wizard de clique único) + autosave por série
+let wizard = null;           // { exercicios, exIdx, setIdx, tipoSessao }
+let currentLogKey = null;    // chave 'log:AAAA-MM-DD:timestamp' da sessão em andamento
+let currentLogEntry = null;  // objeto salvo a cada série registrada (autosave)
+let wizardTimer = null;      // interval do descanso (contagem regressiva)
+let wizardStopwatch = null;  // interval do cronômetro de série por tempo (contagem crescente)
+
+/* ============ TABS ============ */
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+    if (t.dataset.tab === 'historico') carregarHistorico();
+    if (t.dataset.tab === 'biblioteca') renderBiblioteca();
+  });
+});
+
+document.querySelectorAll('.subtab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.subtab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.subpanel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.subtab).classList.add('active');
+    if (t.dataset.subtab === 'hoje-alimentacao') {
+      renderAlimentacao();
+      populateFoodSelect('calc-food-select');
+      populateFoodSelect('calc-food-select-2');
+      renderPesoChart();
+    }
+  });
+});
+
+const RUNNING_PLAN = {
+  1: { facil: "20 min Z1 (pode intercalar caminhada se precisar)", variacao: "20 min Z1", longo: "25 min Z1" },
+  2: { facil: "25 min Z1", variacao: "25 min Z1", longo: "30 min Z1" },
+  3: { facil: "25 min Z1", variacao: "20 min Z1 + 4×2min em Z3 (tempo) com 2min de trote entre", longo: "35 min Z1–Z2" },
+  4: { facil: "25 min Z1", variacao: "25 min Z1 + 5×2min em Z3 (tempo) com 2min de trote entre", longo: "40 min Z1–Z2" }
+};
+
+async function getCorridaSemana() {
+  try {
+    const r = await storage.get('corridaSemana');
+    return r && r.value ? parseInt(r.value) : 1;
+  } catch (e) { return 1; }
+}
+async function setCorridaSemana(n) {
+  n = Math.max(1, Math.min(4, n));
+  await storage.set('corridaSemana', String(n));
+  renderWorkoutArea('corrida');
+}
+
+/* ============ INICIALIZAÇÃO DO DIA ============ */
+function initDaySelect() {
+  const sel = document.getElementById('day-select');
+  const today = new Date().getDay();
+  const opts = [
+    { v: "A", l: "Musculação A" }, { v: "B", l: "Musculação B" }, { v: "C", l: "Musculação C" },
+    { v: "corrida", l: "Corrida" }, { v: "mobilidade", l: "Mobilidade" }, { v: "descanso", l: "Descanso" }
+  ];
+  sel.innerHTML = opts.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
+  sel.value = DAY_TO_TYPE[today];
+  sel.addEventListener('change', () => renderWorkoutArea(sel.value));
+  renderWorkoutArea(sel.value);
+}
+
+async function renderWorkoutArea(type) {
+  currentDayType = type;
+  sessionSets = {};
+  currentLogKey = null;
+  currentLogEntry = null;
+  wizard = null;
+  clearInterval(wizardTimer);
+  clearInterval(wizardStopwatch);
+  const area = document.getElementById('workout-area');
+  const finalizar = document.getElementById('finalizar-card');
+  const today = new Date().getDay();
+
+  if (type === 'A' || type === 'B' || type === 'C') {
+    const prog = PROGRAM[type];
+    area.innerHTML = `
+      <div class="card">
+        <h3>Aquecimento (antes de começar) — ~10-12 min</h3>
+        <ol style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+          <li><strong>Geral (5 min):</strong> esteira, bike ou polichinelos em ritmo leve, só pra subir a temperatura e ativar o corpo.</li>
+          <li><strong>Mobilidade dinâmica (3-5 min):</strong> balanços de perna, agachamento com rotação de tronco, círculos de quadril e ombro — nada de alongamento estático longo aqui.</li>
+          <li><strong>Séries de aproximação:</strong> nos exercícios marcados com 🔥 abaixo, faça 2-3 séries subindo a carga gradualmente até chegar no peso de trabalho — o app já calcula isso pra você com base na sua última sessão.</li>
+        </ol>
+        <p style="font-size:12px;color:var(--danger);margin:4px 0 0;">Nunca comece um exercício composto pesado direto na carga de trabalho, mesmo já aquecido de forma geral.</p>
+      </div>
+      <div class="card">
+        <h3>${prog.label} — ~35-40 min</h3>
+        <h4>Diretrizes de hoje</h4>
+        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+          <li>Faça todas as séries entre <strong>RIR 0–3</strong><span class="qmark" onclick="abrirGlossario('rir')">?</span> (perto da falha, sem chegar sempre até zero).</li>
+          <li>Descanso conforme indicado em cada exercício — compostos pesados (agachamento, RDL, leg press) precisam de mais tempo que isolados.</li>
+          <li><strong>Progressão:</strong> suba a carga quando completar o topo da faixa de reps com técnica limpa em <em>todas</em> as séries do exercício.</li>
+          <li><strong>Deload:</strong><span class="qmark" onclick="abrirGlossario('deload')">?</span> a cada 4 semanas, considere 1 semana com ~40–50% do volume (menos séries) se sentir fadiga acumulada, dor persistente ou queda de desempenho.</li>
+          <li>Amplitude completa (ROM<span class="qmark" onclick="abrirGlossario('rom')">?</span> total) em todos os exercícios — é parte do estímulo de hipertrofia e também trabalha sua mobilidade.</li>
+        </ul>
+      </div>
+      <div id="wizard-area"></div>
+      <div class="card">
+        <h3>Finalização — alongamento MMII (~10 min)</h3>
+        <p style="font-size:13px;color:var(--text-dim);">Independente do treino do dia, feche a sessão com este bloco curto — trabalha diretamente sua prioridade de mobilidade e ajuda a completar a hora de treino.</p>
+        ${LIBRARY.mobilidade.items.filter(i => ['mob-quadril', 'mob-isquio', 'mob-adutor', 'mob-tornozelo'].includes(i.id)).map(i => renderMobilidadeItem(i, 40, "1-2 séries de 30-45s", "final")).join('')}
+      </div>`;
+    finalizar.style.display = 'block';
+    iniciarSessaoTreino(prog.exercicios, 'musculacao');
+
+  } else if (type === 'corrida') {
+    const semana = await getCorridaSemana();
+    const plano = RUNNING_PLAN[semana];
+    let subtipo = 'facil', subtipoLabel = 'Corrida fácil (Z1)';
+    if (today === 6) { subtipo = 'variacao'; subtipoLabel = 'Corrida com variação (tempo/fartlek)'; }
+    if (today === 0) { subtipo = 'longo'; subtipoLabel = 'Corrida longa'; }
+
+    area.innerHTML = `
+      <div class="card">
+        <h3>Corrida de hoje — ${subtipoLabel}</h3>
+        <div class="row" style="align-items:center;margin-bottom:6px;">
+          <div><label style="margin:0;">Semana do plano</label></div>
+          <div style="flex:0 0 auto;display:flex;gap:6px;">
+            <button class="secondary" style="padding:6px 12px;" onclick="setCorridaSemana(${semana - 1})">−</button>
+            <div style="padding:6px 14px;background:#0d0f14;border-radius:8px;">${semana}/4</div>
+            <button class="secondary" style="padding:6px 12px;" onclick="setCorridaSemana(${semana + 1})">+</button>
+          </div>
+        </div>
+        <div class="suggestion">Meta de hoje: ${plano[subtipo]}</div>
+        <h4>Aquecimento antes de correr</h4>
+        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+          <li>5 min de caminhada rápida ou trote bem leve.</li>
+          <li>Skipping baixo, elevação de joelho e chute no glúteo, 20-30s cada, leve.</li>
+          <li>2-3 balanços dinâmicos de perna (frente/trás e lateral) por lado — nada de alongamento estático longo aqui.</li>
+          <li>Comece a corrida principal em ritmo ainda mais leve que o alvo por 3-5 min antes de assumir o ritmo da zona.</li>
+        </ul>
+        <h4>Diretrizes</h4>
+        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+          <li>Zona 1<span class="qmark" onclick="abrirGlossario('zona')">?</span> = ritmo em que você consegue conversar frases inteiras sem ofegar.</li>
+          <li>Se notar "passada longa" (pé aterrissando muito à frente do corpo), aumente a cadência em 5–10%.</li>
+          <li>Avance de semana só quando a atual estiver confortável — sem dor articular, sem fadiga excessiva no dia seguinte.</li>
+          <li>Após a semana 4, repita o padrão da semana 4 aumentando ~10%/semana enquanto estiver confortável.</li>
+        </ul>
+        ${acaoImagemVideo(DIAGRAMS['corrida-postura'], 'postura de corrida cadência')}
+        <p style="font-size:13px;color:var(--text-dim);">Registre rápido aqui, ou use a aba <strong>Importar Garmin</strong> depois do treino para preencher automaticamente.</p>
+        <label>Distância (km)</label><input type="number" step="0.01" id="q-dist">
+        <label>Tempo (min)</label><input type="number" step="0.1" id="q-tempo">
+        <label>Zona predominante<span class="qmark" onclick="abrirGlossario('zona')">?</span></label>
+        <select id="q-zona"><option>Z1</option><option>Z2</option><option>Z3</option><option>Z4</option><option>Z5</option></select>
+      </div>
+      <div class="card">
+        <h3>Depois de correr (~25-30 min)</h3>
+        <p style="font-size:13px;color:var(--text-dim);">Não é pra correr mais tempo pra "completar a hora" — isso aumentaria o risco de lesão fora da progressão segura. Em vez disso, complete a sessão com isto:</p>
+        <h4>Mobilidade complementar (15-20 min)</h4>
+        ${LIBRARY.mobilidade.items.filter(i => ['mob-quadril', 'mob-isquio', 'mob-adutor', 'mob-tornozelo'].includes(i.id)).map(i => renderMobilidadeItem(i, 45, "2-3 séries de 30-60s", "corrida")).join('')}
+        <h4 style="margin-top:14px;">Ativação leve para corredores (5-10 min)</h4>
+        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+          <li>Panturrilha isométrica (parede) — 3x20-30s.</li>
+          <li>Ponte de glúteo (glute bridge) — 2x12-15.</li>
+          <li>Prancha — 2x30-40s.</li>
+        </ul>
+        <p style="font-size:12px;color:var(--text-dim);">Trabalho leve, não-fatigante — melhora economia de corrida sem interferir na recuperação (Denadai et al., 2017; Eihara et al., 2022; Seção 3).</p>
+      </div>`;
+    finalizar.style.display = 'block';
+
+  } else if (type === 'mobilidade') {
+    const itens = LIBRARY.mobilidade.items.filter(i => i.id !== 'mob-protocolo');
+    const alongamentos = itens.filter(i => ['mob-quadril', 'mob-isquio', 'mob-adutor', 'mob-tornozelo'].includes(i.id));
+    const circuito = PROGRAM.mobilidade;
+
+    area.innerHTML = `
+      <div class="card">
+        <h3>Mobilidade dedicada (MMII<span class="qmark" onclick="abrirGlossario('mmii')">?</span>) — ~55-60 min</h3>
+        <p style="font-size:13px;color:var(--text-dim);">Desconforto leve a moderado nos alongamentos — nunca dor aguda. CARs e foam roller ficam na Biblioteca como opcionais, fora do fluxo padrão.</p>
+      </div>
+
+      <div class="card">
+        <h4 style="margin:0 0 4px;color:var(--accent);">Fase 1 — Aquecimento leve (5 min)</h4>
+        <p style="font-size:12px;color:var(--text-dim);">Caminhada ou bike bem leve, só pra subir a temperatura antes de alongar.</p>
+      </div>
+
+      <div class="card">
+        <h4 style="margin:0 0 4px;color:var(--accent);">Fase 2 — Alongamento estático completo (25-30 min)</h4>
+        <p style="font-size:12px;color:var(--text-dim);">3 séries de 45-60s por lado, cada região.</p>
+      </div>
+      ${alongamentos.map(i => renderMobilidadeItem(i, 50, "3 séries de 45-60s", "dedicada")).join('')}
+
+      <div class="card">
+        <h4 style="margin:0 0 4px;color:var(--accent);">Fase 3 — Circuito de estabilidade e core (15-20 min)</h4>
+        <p style="font-size:12px;color:var(--text-dim);">Carga leve, foco em controle. Glúteo médio e core são pontos-chave de prevenção de lesão em corredores (Seção 3 e 9) — justifica o treino ser aqui na academia, não só alongamento.</p>
+      </div>
+      <div id="wizard-area"></div>
+
+      <div class="card">
+        <label>Duração total (min)</label><input type="number" id="q-dur">
+        <label>Áreas trabalhadas</label><input type="text" id="q-areas" placeholder="Ex: quadril, isquio, tornozelo, core">
+      </div>`;
+    finalizar.style.display = 'block';
+    iniciarSessaoTreino(circuito.exercicios, 'mobilidade');
+  } else {
+    area.innerHTML = `
+      <div class="card">
+        <h3>Dia de descanso</h3>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">
+          Sono é a intervenção de maior custo-benefício: priorize 7–9h esta noite. Privação de sono reduz força máxima,
+          potência explosiva e aumenta a percepção de esforço no treino seguinte. Aproveite para manter a proteína em dia
+          mesmo sem treino — a síntese muscular continua acontecendo nas 24–48h após a última sessão.
+        </p>
+      </div>`;
+    finalizar.style.display = 'block';
+  }
+}
+
+function renderExerciseCard(ex) {
+  const rangeLabel = ex.isTime ? "tempo" : `${ex.repMin}–${ex.repMax} reps`;
+  const cueItem = LIBRARY.musculacao.items.find(i => i.id === ex.cue);
+  const execHtml = cueItem ? `
+    <details>
+      <summary>Como executar</summary>
+      ${acaoImagemVideo(DIAGRAMS[cueItem.id] || '', ex.nome)}
+      <h4>Execução</h4>
+      <ul>${cueItem.exec.map(e => `<li>${e}</li>`).join('')}</ul>
+      ${cueItem.erros && cueItem.erros.length ? `<h4>Erros comuns</h4><ul>${cueItem.erros.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+      ${cueItem.evidencia ? `<h4>Por quê</h4><p>${cueItem.evidencia}</p>` : ''}
+    </details>` : '';
+  return `
+    <div class="card exercise-card" id="card-${ex.id}">
+      <div class="ex-title">
+        <div>
+          <div class="name">${ex.principal ? '🔥 ' : ''}${ex.nome}</div>
+          <div class="meta">${ex.sets} séries · ${rangeLabel} · descanso ${ex.rest}s</div>
+        </div>
+      </div>
+      ${execHtml}
+      <div class="suggestion" id="sugestao-${ex.id}">Carregando sugestão...</div>
+      <div id="log-${ex.id}" class="set-log"></div>
+      <div id="input-${ex.id}"></div>
+      <button class="secondary" style="margin-top:10px;width:100%;" onclick="abrirInputSerie('${ex.id}')">+ Registrar série</button>
+    </div>`;
+}
+
+function roundToStep(value, step) {
+  return Math.round(value / step) * step;
+}
+
+async function preencherSugestao(ex) {
+  const el = document.getElementById(`sugestao-${ex.id}`);
+  try {
+    const r = await storage.get('lastset:' + ex.id);
+    if (!r || !r.value) {
+      el.textContent = ex.principal
+        ? "Primeira vez neste exercício — comece leve, suba aos poucos até achar uma carga de trabalho confortável (sem chegar perto da falha hoje)."
+        : "Primeira vez registrando este exercício — comece com uma carga confortável.";
+      return;
+    }
+    const last = JSON.parse(r.value);
+    if (ex.isTime) {
+      el.textContent = `Última vez: ${last.time}s. Tente igualar ou passar um pouco.`;
+      return;
+    }
+    let targetWeight = parseFloat(last.weight);
+    let texto = `Última vez: ${last.weight}kg x${last.reps} (RIR ${last.rir})`;
+    if (last.reps >= ex.repMax && last.rir <= 1 && ex.inc > 0) {
+      targetWeight = parseFloat(last.weight) + ex.inc;
+      texto += ` → sugestão: subir para ${targetWeight.toFixed(1)}kg`;
+    } else if (ex.inc > 0) {
+      texto += ` → sugestão: manter ${last.weight}kg, buscar +1 rep ou RIR menor`;
+    }
+
+    if (ex.principal && targetWeight > 0) {
+      const step = ex.inc >= 5 ? 5 : 2.5;
+      const w40 = roundToStep(targetWeight * 0.4, step);
+      const w60 = roundToStep(targetWeight * 0.6, step);
+      const w80 = roundToStep(targetWeight * 0.8, step);
+      texto += `<br>🔥 <strong>Aquecimento específico</strong> (antes da carga de trabalho):<br>` +
+        `${w40}kg x8-10 → ${w60}kg x5-6 → ${w80}kg x2-3 → aí sim ${targetWeight.toFixed(1)}kg de trabalho`;
+    }
+
+    el.innerHTML = texto;
+  } catch (e) {
+    el.textContent = "Primeira vez registrando este exercício.";
+  }
+}
+
+function abrirInputSerie(exId) {
+  const prog = PROGRAM[currentDayType];
+  const ex = prog.exercicios.find(e => e.id === exId);
+  const container = document.getElementById(`input-${exId}`);
+  if (ex.isTime) {
+    container.innerHTML = `
+      <label>Tempo (segundos)</label>
+      <div class="stepper">
+        <button onclick="ajustarValor('${exId}','time',-5)">−</button>
+        <div class="val" id="val-${exId}-time">30</div>
+        <button onclick="ajustarValor('${exId}','time',5)">+</button>
+      </div>
+      <button class="big" onclick="registrarSerie('${exId}')">Concluir série</button>`;
+  } else {
+    container.innerHTML = `
+      <label>Peso (kg)</label>
+      <div class="stepper">
+        <button onclick="ajustarValor('${exId}','weight',-2.5)">−</button>
+        <div class="val" id="val-${exId}-weight">20</div>
+        <button onclick="ajustarValor('${exId}','weight',2.5)">+</button>
+      </div>
+      <label>Repetições</label>
+      <div class="stepper">
+        <button onclick="ajustarValor('${exId}','reps',-1)">−</button>
+        <div class="val" id="val-${exId}-reps">${ex.repMin}</div>
+        <button onclick="ajustarValor('${exId}','reps',1)">+</button>
+      </div>
+      <label>RIR<span class="qmark" onclick="abrirGlossario('rir')">?</span></label>
+      <div class="stepper">
+        <button onclick="ajustarValor('${exId}','rir',-1)">−</button>
+        <div class="val" id="val-${exId}-rir">2</div>
+        <button onclick="ajustarValor('${exId}','rir',1)">+</button>
+      </div>
+      <button class="big" onclick="registrarSerie('${exId}')">Concluir série</button>`;
+  }
+}
+
+function ajustarValor(exId, campo, delta) {
+  const el = document.getElementById(`val-${exId}-${campo}`);
+  let v = parseFloat(el.textContent) + delta;
+  if (campo === 'rir') v = Math.max(0, Math.min(5, v));
+  if (campo === 'reps') v = Math.max(1, v);
+  if (campo === 'weight') v = Math.max(0, v);
+  if (campo === 'time') v = Math.max(5, v);
+  el.textContent = v;
+}
+
+async function registrarSerie(exId) {
+  const prog = PROGRAM[currentDayType];
+  const ex = prog.exercicios.find(e => e.id === exId);
+  let setData;
+  if (ex.isTime) {
+    setData = { time: parseFloat(document.getElementById(`val-${exId}-time`).textContent) };
+  } else {
+    setData = {
+      weight: parseFloat(document.getElementById(`val-${exId}-weight`).textContent),
+      reps: parseFloat(document.getElementById(`val-${exId}-reps`).textContent),
+      rir: parseFloat(document.getElementById(`val-${exId}-rir`).textContent)
+    };
+  }
+  if (!sessionSets[exId]) sessionSets[exId] = [];
+  sessionSets[exId].push(setData);
+
+  // salvar como "última série" para sugestão futura
+  try { await storage.set('lastset:' + exId, JSON.stringify(setData)); } catch (e) {}
+
+  renderSetLog(exId);
+  document.getElementById(`input-${exId}`).innerHTML = '';
+
+  if (sessionSets[exId].length >= ex.sets) {
+    document.getElementById(`card-${exId}`).classList.add('done');
+  }
+
+  iniciarTimer(ex.rest, 'Descanso');
+}
+
+function renderSetLog(exId) {
+  const el = document.getElementById(`log-${exId}`);
+  const sets = sessionSets[exId] || [];
+  el.innerHTML = sets.map((s, i) => {
+    const label = s.time !== undefined ? `${s.time}s` : `${s.weight}kg x${s.reps} (RIR${s.rir})`;
+    return `<span class="chip">Série ${i+1}: ${label}</span>`;
+  }).join('');
+}
+
+function abrirCue(cueId) {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  document.querySelector('.tab[data-tab="biblioteca"]').classList.add('active');
+  document.getElementById('biblioteca').classList.add('active');
+  renderBiblioteca(cueId);
+}
+
+/* ============ TREINO GUIADO (clique único, autosave por série) ============
+   Cada série registrada é salva no Supabase na hora (upsert na mesma chave
+   'log:AAAA-MM-DD:timestamp' da sessão) — não existe mais um botão de
+   "salvar treino" no final. O fluxo mostra sempre UMA tela por vez:
+   - exercícios por repetição: já entra direto no registro da série; ao
+     concluir, o descanso começa sozinho e, quando termina, a tela seguinte
+     (próxima série ou próximo exercício) já aparece pronta pra preencher.
+   - exercícios por tempo (isTime): aparece um botão "Iniciar série", que
+     dispara um cronômetro contando; ao concluir, o descanso começa sozinho
+     e, no final, aparece o botão pra iniciar a próxima série.
+   O botão "Encerrar treino" (ver encerrarTreino) só registra sono/observação
+   final — as séries já estão salvas antes disso. */
+
+function novoLogEntryBase(tipoSessao) {
+  const date = hojeStr();
+  const entry = { date, sono: null, obs: '', horaInicio: new Date().toISOString() };
+  if (tipoSessao === 'musculacao') {
+    entry.type = 'musculacao';
+    entry.treino = currentDayType;
+    entry.sets = {};
+  } else if (tipoSessao === 'mobilidade') {
+    entry.type = 'mobilidade';
+    entry.duracao = null;
+    entry.areas = '';
+    entry.sets = {};
+  }
+  return entry;
+}
+
+// Retomada de sessão (o app minimizado/em segundo plano pode ser descarregado
+// da memória pelo navegador/celular — ao reabrir, o JS reinicia do zero. Sem
+// isso, o progresso do wizard "zerava" mesmo com as séries já salvas no Supabase.)
+const WIZARD_RESUME_KEY = 'wizardResume';
+
+function salvarWizardResume() {
+  if (!wizard || !currentLogKey) return;
+  try {
+    localStorage.setItem(WIZARD_RESUME_KEY, JSON.stringify({
+      date: hojeStr(),
+      dayType: currentDayType,
+      tipoSessao: wizard.tipoSessao,
+      exIdx: wizard.exIdx,
+      setIdx: wizard.setIdx,
+      currentLogKey,
+      currentLogEntry,
+      sessionSets
+    }));
+  } catch (e) {}
+}
+
+function limparWizardResume() {
+  try { localStorage.removeItem(WIZARD_RESUME_KEY); } catch (e) {}
+}
+
+function lerWizardResume() {
+  try {
+    const raw = localStorage.getItem(WIZARD_RESUME_KEY);
+    if (!raw) return null;
+    const st = JSON.parse(raw);
+    if (st.date !== hojeStr()) { limparWizardResume(); return null; }
+    return st;
+  } catch (e) { return null; }
+}
+
+function iniciarSessaoTreino(exercicios, tipoSessao) {
+  const resume = lerWizardResume();
+  if (resume && resume.dayType === currentDayType && resume.tipoSessao === tipoSessao && resume.currentLogKey) {
+    sessionSets = resume.sessionSets || {};
+    currentLogKey = resume.currentLogKey;
+    currentLogEntry = resume.currentLogEntry;
+    wizard = { exercicios, exIdx: resume.exIdx, setIdx: resume.setIdx, tipoSessao };
+    avancarOuMostrarEtapaWizard();
+    return;
+  }
+  sessionSets = {};
+  currentLogKey = 'log:' + hojeStr() + ':' + Date.now();
+  currentLogEntry = novoLogEntryBase(tipoSessao);
+  wizard = { exercicios, exIdx: 0, setIdx: 0, tipoSessao };
+  renderWizardIntro();
+}
+
+function renderWizardIntro() {
+  const el = document.getElementById('wizard-area');
+  if (!el || !wizard) return;
+  el.innerHTML = `
+    <div class="card" style="text-align:center;">
+      <h3>Pronto pra começar?</h3>
+      <p style="font-size:13px;color:var(--text-dim);">${wizard.exercicios.length} exercícios nesta sessão. A tela vai te guiar um passo de cada vez — cada série já é salva sozinha assim que você registra.</p>
+      <button class="big" style="margin-top:6px;" onclick="iniciarProximaEtapaWizard()">▶ Iniciar treino</button>
+    </div>`;
+}
+
+function exercicioAtualWizard() {
+  return wizard.exercicios[wizard.exIdx];
+}
+
+function wizardExecHtml(ex) {
+  const cueItem = LIBRARY.musculacao.items.find(i => i.id === ex.cue);
+  if (!cueItem) return '';
+  return `
+    <details style="margin-top:8px;">
+      <summary>Como executar</summary>
+      ${acaoImagemVideo(DIAGRAMS[cueItem.id] || '', ex.nome)}
+      <h4>Execução</h4>
+      <ul>${cueItem.exec.map(e => `<li>${e}</li>`).join('')}</ul>
+      ${cueItem.erros && cueItem.erros.length ? `<h4>Erros comuns</h4><ul>${cueItem.erros.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+      ${cueItem.evidencia ? `<h4>Por quê</h4><p>${cueItem.evidencia}</p>` : ''}
+    </details>`;
+}
+
+function iniciarProximaEtapaWizard() {
+  if (!wizard) return;
+  const ex = exercicioAtualWizard();
+  const el = document.getElementById('wizard-area');
+  if (!el) return;
+  const progresso = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Exercício ${wizard.exIdx + 1}/${wizard.exercicios.length} · Série ${wizard.setIdx + 1}/${ex.sets}</div>`;
+
+  if (ex.isTime) {
+    el.innerHTML = `
+      <div class="card exercise-card">
+        ${progresso}
+        <div class="name" style="font-size:17px;">${ex.principal ? '🔥 ' : ''}${ex.nome}</div>
+        <div class="meta">${ex.sets} séries por tempo · descanso ${ex.rest}s</div>
+        ${wizardExecHtml(ex)}
+        <div class="suggestion" id="wizard-sugestao" style="margin-top:10px;">Carregando sugestão...</div>
+        <button class="big" style="margin-top:14px;width:100%;" onclick="iniciarCronometroSerieWizard()">▶ Iniciar série ${wizard.setIdx + 1}</button>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div class="card exercise-card">
+        ${progresso}
+        <div class="name" style="font-size:17px;">${ex.principal ? '🔥 ' : ''}${ex.nome}</div>
+        <div class="meta">${ex.repMin}–${ex.repMax} reps · descanso ${ex.rest}s</div>
+        ${wizardExecHtml(ex)}
+        <div class="suggestion" id="wizard-sugestao" style="margin-top:10px;">Carregando sugestão...</div>
+        <label>Peso (kg)</label>
+        <div class="stepper">
+          <button onclick="ajustarValorWizard('weight',-2.5)">−</button>
+          <div class="val" id="wizard-val-weight">20</div>
+          <button onclick="ajustarValorWizard('weight',2.5)">+</button>
+        </div>
+        <label>Repetições</label>
+        <div class="stepper">
+          <button onclick="ajustarValorWizard('reps',-1)">−</button>
+          <div class="val" id="wizard-val-reps">${ex.repMin}</div>
+          <button onclick="ajustarValorWizard('reps',1)">+</button>
+        </div>
+        <label>RIR<span class="qmark" onclick="abrirGlossario('rir')">?</span></label>
+        <div class="stepper">
+          <button onclick="ajustarValorWizard('rir',-1)">−</button>
+          <div class="val" id="wizard-val-rir">2</div>
+          <button onclick="ajustarValorWizard('rir',1)">+</button>
+        </div>
+        <button class="big" style="margin-top:10px;width:100%;" onclick="registrarSerieWizard()">Concluir série ${wizard.setIdx + 1}</button>
+      </div>`;
+  }
+  preencherSugestaoWizard(ex);
+}
+
+async function preencherSugestaoWizard(ex) {
+  const el = document.getElementById('wizard-sugestao');
+  if (!el) return;
+  try {
+    const r = await storage.get('lastset:' + ex.id);
+    if (!r || !r.value) {
+      el.textContent = ex.principal
+        ? "Primeira vez neste exercício — comece leve, suba aos poucos até achar uma carga de trabalho confortável (sem chegar perto da falha hoje)."
+        : "Primeira vez registrando este exercício — comece com uma carga confortável.";
+      return;
+    }
+    const last = JSON.parse(r.value);
+    if (ex.isTime) {
+      el.textContent = `Última vez: ${last.time}s. Tente igualar ou passar um pouco.`;
+      return;
+    }
+    let targetWeight = parseFloat(last.weight);
+    let texto = `Última vez: ${last.weight}kg x${last.reps} (RIR ${last.rir})`;
+    if (last.reps >= ex.repMax && last.rir <= 1 && ex.inc > 0) {
+      targetWeight = parseFloat(last.weight) + ex.inc;
+      texto += ` → sugestão: subir para ${targetWeight.toFixed(1)}kg`;
+    } else if (ex.inc > 0) {
+      texto += ` → sugestão: manter ${last.weight}kg, buscar +1 rep ou RIR menor`;
+    }
+    el.innerHTML = texto;
+    const wEl = document.getElementById('wizard-val-weight');
+    if (wEl && targetWeight > 0) wEl.textContent = targetWeight;
+  } catch (e) {
+    el.textContent = "Primeira vez registrando este exercício.";
+  }
+}
+
+function ajustarValorWizard(campo, delta) {
+  const el = document.getElementById(`wizard-val-${campo}`);
+  let v = parseFloat(el.textContent) + delta;
+  if (campo === 'rir') v = Math.max(0, Math.min(5, v));
+  if (campo === 'reps') v = Math.max(1, v);
+  if (campo === 'weight') v = Math.max(0, v);
+  el.textContent = v;
+}
+
+function iniciarCronometroSerieWizard() {
+  const ex = exercicioAtualWizard();
+  const el = document.getElementById('wizard-area');
+  let decorrido = 0;
+  el.innerHTML = `
+    <div class="card exercise-card" style="text-align:center;">
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">Exercício ${wizard.exIdx + 1}/${wizard.exercicios.length} · Série ${wizard.setIdx + 1}/${ex.sets}</div>
+      <div class="name" style="font-size:17px;">${ex.nome}</div>
+      <div style="font-size:48px;font-weight:700;color:var(--accent);margin:20px 0;" id="wizard-cronometro">0s</div>
+      <button class="big" style="width:100%;" onclick="concluirCronometroSerieWizard()">✓ Concluir série ${wizard.setIdx + 1}</button>
+    </div>`;
+  clearInterval(wizardStopwatch);
+  wizardStopwatch = setInterval(() => {
+    decorrido++;
+    const c = document.getElementById('wizard-cronometro');
+    if (c) c.textContent = decorrido + 's'; else clearInterval(wizardStopwatch);
+  }, 1000);
+}
+
+async function concluirCronometroSerieWizard() {
+  clearInterval(wizardStopwatch);
+  const c = document.getElementById('wizard-cronometro');
+  const segundos = c ? parseInt(c.textContent) : 0;
+  await registrarSerieDadosWizard({ time: segundos });
+}
+
+async function registrarSerieWizard() {
+  const weight = parseFloat(document.getElementById('wizard-val-weight').textContent);
+  const reps = parseFloat(document.getElementById('wizard-val-reps').textContent);
+  const rir = parseFloat(document.getElementById('wizard-val-rir').textContent);
+  await registrarSerieDadosWizard({ weight, reps, rir });
+}
+
+async function registrarSerieDadosWizard(setData) {
+  const ex = exercicioAtualWizard();
+  // timestamp exato de cada série — é o que permite cruzar com a FC do Garmin depois
+  setData.ts = new Date().toISOString();
+  if (!sessionSets[ex.id]) sessionSets[ex.id] = [];
+  sessionSets[ex.id].push(setData);
+  currentLogEntry.sets = sessionSets;
+
+  // autosave imediato: essa série já vai pro Supabase agora, sem esperar o fim do treino
+  try { await storage.set(currentLogKey, JSON.stringify(currentLogEntry)); } catch (e) {}
+  try { await storage.set('lastset:' + ex.id, JSON.stringify(setData)); } catch (e) {}
+
+  wizard.setIdx++;
+  salvarWizardResume();
+  iniciarDescansoWizard(ex.rest, ex);
+}
+
+function iniciarDescansoWizard(segundos, exConcluido) {
+  const el = document.getElementById('wizard-area');
+  let restante = segundos;
+  el.innerHTML = `
+    <div class="card exercise-card" style="text-align:center;">
+      <div style="font-size:12px;color:var(--text-dim);">Exercício ${wizard.exIdx + 1}/${wizard.exercicios.length} · Série ${wizard.setIdx}/${exConcluido.sets} concluída ✓</div>
+      <div style="font-size:14px;color:var(--text-dim);margin-top:6px;">Descanso</div>
+      <div style="font-size:48px;font-weight:700;color:var(--accent);margin:14px 0;" id="wizard-descanso-n">${restante}s</div>
+      <button class="secondary" onclick="pularDescansoWizard()">Pular descanso</button>
+    </div>`;
+  clearInterval(wizardTimer);
+  wizardTimer = setInterval(() => {
+    restante--;
+    const n = document.getElementById('wizard-descanso-n');
+    if (n) n.textContent = restante + 's';
+    if (restante <= 0) {
+      clearInterval(wizardTimer);
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      avancarEtapaWizard();
+    }
+  }, 1000);
+}
+
+function pularDescansoWizard() {
+  clearInterval(wizardTimer);
+  avancarEtapaWizard();
+}
+
+function avancarEtapaWizard() {
+  avancarOuMostrarEtapaWizard();
+}
+
+// Compartilhada entre "descanso acabou normalmente" e "retomando sessão depois
+// de reabrir o app": decide se rola pro próximo exercício ou mostra a etapa atual.
+function avancarOuMostrarEtapaWizard() {
+  if (!wizard) return;
+  const ex = exercicioAtualWizard();
+  if (wizard.setIdx >= ex.sets) {
+    wizard.exIdx++;
+    wizard.setIdx = 0;
+  }
+  if (wizard.exIdx >= wizard.exercicios.length) {
+    renderWizardConcluido();
+    return;
+  }
+  salvarWizardResume();
+  iniciarProximaEtapaWizard();
+}
+
+function renderWizardConcluido() {
+  limparWizardResume();
+  const el = document.getElementById('wizard-area');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="card" style="text-align:center;">
+      <h3>🎉 Treino de força concluído</h3>
+      <p style="font-size:13px;color:var(--text-dim);">Todas as séries já foram salvas automaticamente. Feche com o alongamento abaixo e registre sono/observações no fim da página pra encerrar.</p>
+    </div>`;
+}
+
+/* ============ CRONÔMETRO (descanso entre séries E alongamentos) ============ */
+function iniciarTimer(segundos, label) {
+  clearInterval(restInterval);
+  let restante = segundos;
+  const timer = document.getElementById('rest-timer');
+  const n = document.getElementById('rest-n');
+  const lbl = document.getElementById('rest-label');
+  lbl.textContent = label || 'Descanso';
+  n.textContent = restante;
+  timer.classList.add('active');
+  restInterval = setInterval(() => {
+    restante--;
+    n.textContent = restante;
+    if (restante <= 0) {
+      clearInterval(restInterval);
+      timer.classList.remove('active');
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+  }, 1000);
+}
+function pularDescanso() {
+  clearInterval(restInterval);
+  document.getElementById('rest-timer').classList.remove('active');
+}
+
+/* ============ CONTADOR DE ALONGAMENTOS (mobilidade) ============ */
+let mobilitySessionCount = {};
+function iniciarAlongamento(uid, itemId, segundos, ladoLabel) {
+  const key = uid + ':' + itemId;
+  if (!mobilitySessionCount[key]) mobilitySessionCount[key] = 0;
+  mobilitySessionCount[key]++;
+  const el = document.getElementById(`mob-log-${uid}-${itemId}`);
+  if (el) {
+    const n = mobilitySessionCount[key];
+    el.innerHTML = Array.from({ length: n }, (_, i) => `<span class="chip">Série ${i + 1} ✓</span>`).join('');
+  }
+  iniciarTimer(segundos, 'Alongamento' + (ladoLabel ? ' — ' + ladoLabel : ''));
+}
+function renderMobilidadeItem(item, holdSeconds, setsLabel, uid) {
+  return `
+    <details>
+      <summary>${item.nome}${setsLabel ? ' (' + setsLabel + ')' : ''}</summary>
+      ${acaoImagemVideo(DIAGRAMS[item.id] || '', item.nome)}
+      <ul>${item.exec.map(e => `<li>${e}</li>`).join('')}</ul>
+      ${item.erros && item.erros.length ? `<h4>Erros comuns</h4><ul>${item.erros.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+      <div id="mob-log-${uid}-${item.id}" class="set-log" style="margin-top:6px;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="secondary" style="flex:1;" onclick="iniciarAlongamento('${uid}','${item.id}',${holdSeconds},'esquerda')">▶️ Lado esquerdo (${holdSeconds}s)</button>
+        <button class="secondary" style="flex:1;" onclick="iniciarAlongamento('${uid}','${item.id}',${holdSeconds},'direita')">▶️ Lado direito (${holdSeconds}s)</button>
+      </div>
+    </details>`;
+}
+
+function renderMobilidadeAtivaItem(item) {
+  if (!item) return '';
+  return `
+    <details open>
+      <summary>${item.nome}</summary>
+      ${acaoImagemVideo(DIAGRAMS[item.id] || '', item.nome)}
+      <ul>${item.exec.map(e => `<li>${e}</li>`).join('')}</ul>
+      ${item.erros && item.erros.length ? `<h4>Erros comuns</h4><ul>${item.erros.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+      ${item.evidencia ? `<h4>Por quê</h4><p style="font-size:12px;color:var(--text-dim);">${item.evidencia}</p>` : ''}
+    </details>`;
+}
+
+
+/* ============ ENCERRAR TREINO ============
+   As séries (musculação e circuito de mobilidade) já foram salvas uma a uma
+   pelo wizard, conforme registradas — este botão NÃO é o mecanismo de
+   salvamento. Ele só grava sono/observações finais (e, pra corrida/mobilidade
+   geral/descanso, os campos que não passam pelo wizard) na mesma entrada. */
+async function encerrarTreino() {
+  const status = document.getElementById('status');
+  const sono = document.getElementById('f-sono').value || null;
+  const obs = document.getElementById('f-obs').value || '';
+
+  if (!currentLogEntry) {
+    currentLogKey = 'log:' + hojeStr() + ':' + Date.now();
+    if (currentDayType === 'A' || currentDayType === 'B' || currentDayType === 'C') {
+      currentLogEntry = novoLogEntryBase('musculacao');
+    } else if (currentDayType === 'mobilidade') {
+      currentLogEntry = novoLogEntryBase('mobilidade');
+    } else if (currentDayType === 'corrida') {
+      currentLogEntry = { date: hojeStr(), type: 'corrida', sono: null, obs: '', horaInicio: new Date().toISOString() };
+    } else {
+      currentLogEntry = { date: hojeStr(), type: 'descanso', sono: null, obs: '', horaInicio: new Date().toISOString() };
+    }
+  }
+
+  currentLogEntry.sono = sono;
+  currentLogEntry.obs = obs;
+  // marca o fim da sessão — junto com horaInicio, delimita a janela de tempo
+  // pra cruzar com a FC do Garmin depois (série por série já tem seu próprio ts)
+  currentLogEntry.horaFim = new Date().toISOString();
+
+  if (currentDayType === 'corrida') {
+    currentLogEntry.distancia = document.getElementById('q-dist').value || null;
+    currentLogEntry.tempo = document.getElementById('q-tempo').value || null;
+    currentLogEntry.zona = document.getElementById('q-zona').value;
+  } else if (currentDayType === 'mobilidade') {
+    currentLogEntry.duracao = document.getElementById('q-dur').value || null;
+    currentLogEntry.areas = document.getElementById('q-areas').value || '';
+  }
+
+  try {
+    const result = await storage.set(currentLogKey, JSON.stringify(currentLogEntry));
+    if (result) {
+      limparWizardResume();
+      status.textContent = '✓ Treino encerrado. (As séries já estavam salvas conforme você foi registrando.)';
+      status.style.color = 'var(--accent)';
+      document.getElementById('f-obs').value = '';
+    } else {
+      status.textContent = 'Falha ao salvar sono/observações. As séries já registradas continuam salvas.';
+      status.style.color = 'var(--danger)';
+    }
+  } catch (err) {
+    status.textContent = 'Erro: ' + err.message + ' — as séries já registradas continuam salvas.';
+    status.style.color = 'var(--danger)';
+  }
+}
+
+/* ============ IMPORTAR GARMIN ============ */
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files[0]) handleGarminFile(e.target.files[0]);
+});
+
+let ultimoGarminParsed = null; // guarda o resultado completo (incl. hrSamples/startTime) até o clique em "Salvar corrida"
+
+function handleGarminFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    let parsed;
+    if (text.includes('TrainingCenterDatabase') || file.name.toLowerCase().endsWith('.tcx')) {
+      parsed = parseTCX(text);
+    } else {
+      parsed = parseGPX(text);
+    }
+    mostrarPreviewGarmin(parsed);
+  };
+  reader.onerror = () => {
+    document.getElementById('garmin-preview').innerHTML = '<div class="empty">Não consegui ler o arquivo. Confira se é .TCX ou .GPX.</div>';
+  };
+  reader.readAsText(file);
+}
+
+// Reduz a série de FC a no máximo maxPoints amostras, mantendo o espaçamento
+// no tempo — evita registros gigantes em atividades muito longas, sem perder
+// a granularidade necessária pra cruzar com o horário de cada série/exercício.
+function downsampleSamples(samples, maxPoints) {
+  maxPoints = maxPoints || 1500;
+  const valid = samples.filter(s => s.t);
+  if (valid.length <= maxPoints) return valid;
+  const step = Math.ceil(valid.length / maxPoints);
+  const out = [];
+  for (let i = 0; i < valid.length; i += step) out.push(valid[i]);
+  return out;
+}
+
+function parseTCX(xmlText) {
+  const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
+  const laps = xml.getElementsByTagName('Lap');
+  let totalDistance = 0, totalTime = 0;
+  for (const lap of laps) {
+    const d = lap.getElementsByTagName('DistanceMeters')[0];
+    const t = lap.getElementsByTagName('TotalTimeSeconds')[0];
+    if (d) totalDistance += parseFloat(d.textContent);
+    if (t) totalTime += parseFloat(t.textContent);
+  }
+
+  // Série de FC por Trackpoint (com horário) — não só a média. É isso que permite
+  // cruzar a frequência cardíaca com o horário exato de cada série/exercício
+  // registrado no app depois (em vez de só um número médio da atividade inteira).
+  const trackpoints = xml.getElementsByTagName('Trackpoint');
+  const samples = [];
+  for (const tp of trackpoints) {
+    const timeNode = tp.getElementsByTagName('Time')[0];
+    if (!timeNode) continue;
+    const hrNode = tp.getElementsByTagName('HeartRateBpm')[0];
+    const hrVal = hrNode ? hrNode.getElementsByTagName('Value')[0] : null;
+    samples.push({ t: timeNode.textContent, hr: hrVal ? parseFloat(hrVal.textContent) : null });
+  }
+  const comHr = samples.filter(s => s.hr != null);
+  const avgHr = comHr.length ? Math.round(comHr.reduce((s, x) => s + x.hr, 0) / comHr.length) : null;
+
+  return {
+    distanceKm: totalDistance ? (totalDistance / 1000) : null,
+    timeMin: totalTime ? (totalTime / 60) : null,
+    avgHr,
+    startTime: samples.length ? samples[0].t : null,
+    endTime: samples.length ? samples[samples.length - 1].t : null,
+    hrSamples: downsampleSamples(samples)
+  };
+}
+
+function parseGPX(text) {
+  const xml = new DOMParser().parseFromString(text, 'text/xml');
+  const pts = xml.getElementsByTagName('trkpt');
+  let dist = 0, prevLat = null, prevLon = null;
+  let firstTime = null, lastTime = null;
+  const toRad = (v) => v * Math.PI / 180;
+  const serializer = new XMLSerializer();
+  const samples = [];
+  for (const pt of pts) {
+    const lat = parseFloat(pt.getAttribute('lat'));
+    const lon = parseFloat(pt.getAttribute('lon'));
+    const timeNode = pt.getElementsByTagName('time')[0];
+    let tIso = null;
+    if (timeNode) {
+      const t = new Date(timeNode.textContent);
+      if (!firstTime) firstTime = t;
+      lastTime = t;
+      tIso = timeNode.textContent;
+    }
+    // FC desse ponto específico (extensão Garmin, ex. gpxtpx:hr) — regex tolera
+    // qualquer prefixo de namespace, só olhando dentro deste <trkpt> por vez.
+    const hrMatch = /<[^>]*:?hr>(\d+)<\/[^>]*:?hr>/i.exec(serializer.serializeToString(pt));
+    if (tIso) samples.push({ t: tIso, hr: hrMatch ? parseFloat(hrMatch[1]) : null });
+    if (prevLat !== null) {
+      const R = 6371000;
+      const dLat = toRad(lat - prevLat);
+      const dLon = toRad(lon - prevLon);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(prevLat)) * Math.cos(toRad(lat)) * Math.sin(dLon/2)**2;
+      dist += R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+    prevLat = lat; prevLon = lon;
+  }
+  const comHr = samples.filter(s => s.hr != null);
+  const avgHr = comHr.length ? Math.round(comHr.reduce((s, x) => s + x.hr, 0) / comHr.length) : null;
+  const timeMin = (firstTime && lastTime) ? (lastTime - firstTime) / 60000 : null;
+  return {
+    distanceKm: dist ? dist / 1000 : null,
+    timeMin,
+    avgHr,
+    startTime: firstTime ? firstTime.toISOString() : null,
+    endTime: lastTime ? lastTime.toISOString() : null,
+    hrSamples: downsampleSamples(samples)
+  };
+}
+
+function mostrarPreviewGarmin(parsed) {
+  ultimoGarminParsed = parsed;
+  const el = document.getElementById('garmin-preview');
+  if (!parsed.distanceKm && !parsed.timeMin) {
+    el.innerHTML = '<div class="empty">Não encontrei dados de distância/tempo nesse arquivo. Confira se exportou a atividade certa.</div>';
+    return;
+  }
+  const nAmostras = parsed.hrSamples ? parsed.hrSamples.length : 0;
+  el.innerHTML = `
+    <div class="card">
+      <h4>Dados encontrados — confira e ajuste se precisar</h4>
+      <label>Distância (km)</label>
+      <input type="number" step="0.01" id="g-dist" value="${parsed.distanceKm ? parsed.distanceKm.toFixed(2) : ''}">
+      <label>Tempo (min)</label>
+      <input type="number" step="0.1" id="g-tempo" value="${parsed.timeMin ? parsed.timeMin.toFixed(1) : ''}">
+      <label>FC média<span class="qmark" onclick="abrirGlossario('fc')">?</span></label>
+      <input type="number" id="g-fc" value="${parsed.avgHr || ''}">
+      <label>Zona predominante<span class="qmark" onclick="abrirGlossario('zona')">?</span></label>
+      <select id="g-zona"><option>Z1</option><option>Z2</option><option>Z3</option><option>Z4</option><option>Z5</option></select>
+      ${nAmostras ? `<p style="font-size:12px;color:var(--text-dim);margin-top:6px;">${nAmostras} pontos de FC ao longo do tempo também serão salvos (não só a média) — permite cruzar com o horário exato de treinos e refeições depois.</p>` : ''}
+      <button class="big" onclick="salvarCorridaGarmin()">Salvar corrida</button>
+      <div id="garmin-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
+    </div>`;
+}
+
+async function salvarCorridaGarmin() {
+  const status = document.getElementById('garmin-status');
+  const startTime = ultimoGarminParsed && ultimoGarminParsed.startTime;
+  const endTime = ultimoGarminParsed && ultimoGarminParsed.endTime;
+  // data real da atividade (pelo horário de início registrado no próprio arquivo,
+  // com a mesma regra de virada às 4h) — não a data em que você importou o arquivo
+  const date = startTime ? dataDoTimestamp(startTime) : hojeStr();
+  const entry = {
+    date, type: 'corrida',
+    distancia: document.getElementById('g-dist').value || null,
+    tempo: document.getElementById('g-tempo').value || null,
+    fc: document.getElementById('g-fc').value || null,
+    zona: document.getElementById('g-zona').value,
+    obs: 'Importado do Garmin',
+    horaInicio: startTime || new Date().toISOString(),
+    horaFim: endTime || new Date().toISOString(),
+    hrSamples: (ultimoGarminParsed && ultimoGarminParsed.hrSamples) || []
+  };
+  try {
+    const key = 'log:' + date + ':' + Date.now();
+    const result = await storage.set(key, JSON.stringify(entry));
+    status.textContent = result ? '✓ Corrida salva no histórico.' : 'Falha ao salvar.';
+  } catch (e) {
+    status.textContent = 'Erro: ' + e.message;
+  }
+}
+
+/* ============ BIBLIOTECA ============ */
+function renderBiblioteca(scrollToId) {
+  const container = document.getElementById('biblioteca-content');
+  const order = ['mobilidade', 'corrida', 'musculacao'];
+  container.innerHTML = order.map(catKey => {
+    const cat = LIBRARY[catKey];
+    if (catKey === 'mobilidade') {
+      return `<div class="cat-header">${cat.label}</div>` + cat.items.map(item => {
+        if (item.id === 'mob-protocolo') {
+          return `<details id="cue-${item.id}">
+            <summary>${item.nome} <span class="grade grade-${item.grade}">${item.grade.toUpperCase()}</span></summary>
+            ${acaoImagemVideo(DIAGRAMS[item.id] || '', item.nome)}
+            <h4>Execução</h4>
+            <ul>${item.exec.map(e => `<li>${e}</li>`).join('')}</ul>
+            ${item.evidencia ? `<h4>Evidência</h4><p>${item.evidencia}</p>` : ''}
+          </details>`;
+        }
+        return `<details id="cue-${item.id}">
+          <summary>${item.nome} <span class="grade grade-${item.grade}">${item.grade.toUpperCase()}</span></summary>
+          ${acaoImagemVideo(DIAGRAMS[item.id] || '', item.nome)}
+          <h4>Execução</h4>
+          <ul>${item.exec.map(e => `<li>${e}</li>`).join('')}</ul>
+          ${item.erros && item.erros.length ? `<h4>Erros comuns</h4><ul>${item.erros.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+          ${item.evidencia ? `<h4>Evidência</h4><p>${item.evidencia}</p>` : ''}
+          <div id="mob-log-biblioteca-${item.id}" class="set-log" style="margin-top:6px;"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="secondary" style="flex:1;" onclick="iniciarAlongamento('biblioteca','${item.id}',45,'esquerda')">▶️ Lado esquerdo (45s)</button>
+            <button class="secondary" style="flex:1;" onclick="iniciarAlongamento('biblioteca','${item.id}',45,'direita')">▶️ Lado direito (45s)</button>
+          </div>
+        </details>`;
+      }).join('');
+    }
+    return `<div class="cat-header">${cat.label}</div>` + cat.items.map(item => `
+      <details id="cue-${item.id}">
+        <summary>${item.nome} <span class="grade grade-${item.grade}">${item.grade.toUpperCase()}</span></summary>
+        ${acaoImagemVideo(DIAGRAMS[item.id] || '', item.nome)}
+        <h4>Execução</h4>
+        <ul>${item.exec.map(e => `<li>${e}</li>`).join('')}</ul>
+        ${item.erros && item.erros.length ? `<h4>Erros comuns</h4><ul>${item.erros.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+        ${item.evidencia ? `<h4>Evidência</h4><p>${item.evidencia}</p>` : ''}
+      </details>
+    `).join('');
+  }).join('');
+
+  if (scrollToId) {
+    setTimeout(() => {
+      const target = document.getElementById(`cue-${scrollToId}`);
+      if (target) { target.setAttribute('open', true); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    }, 50);
+  }
+}
+
+/* ============ HISTÓRICO ============ */
+/* ============ ANÁLISE AUTOMÁTICA (IA) ============ */
+function resumirEntradaParaAnalise(e) {
+  let linha = `${e.date} | `;
+  if (e.type === 'musculacao') {
+    const sets = Object.entries(e.sets || {}).map(([exId, sets]) => {
+      const label = sets.map(s => s.time !== undefined ? `${s.time}s` : `${s.weight}kg x${s.reps}(RIR${s.rir})`).join(', ');
+      return `${exId}: ${label}`;
+    }).join(' / ');
+    linha += `Musculação ${e.treino} — ${sets}`;
+  } else if (e.type === 'corrida') {
+    linha += `Corrida — ${e.distancia || '?'}km em ${e.tempo || '?'}min, FC ${e.fc || '?'}, zona ${e.zona || '?'}`;
+  } else if (e.type === 'mobilidade') {
+    linha += `Mobilidade — ${e.duracao || '?'}min, áreas: ${e.areas || '-'}`;
+  } else {
+    linha += 'Descanso';
+  }
+  if (e.sono) linha += ` | Sono: ${e.sono}h`;
+  if (e.obs) linha += ` | Obs treino: ${e.obs}`;
+  return linha;
+}
+
+function resumirRefeicaoParaAnalise(m) {
+  const macros = [
+    m.proteina ? `${m.proteina}g prot` : null,
+    m.carboidrato ? `${m.carboidrato}g carb` : null,
+    m.gordura ? `${m.gordura}g gord` : null
+  ].filter(Boolean).join(', ');
+  return `${m.date} ${m.hora || ''} | ${m.mealId} | ${m.descricao || '-'}${macros ? ` (${macros})` : ''}${m.sensacao ? ` | ${m.sensacao}` : ''}`;
+}
+
+async function analisarSemana() {
+  const resultado = document.getElementById('analise-resultado');
+  resultado.innerHTML = '<p style="font-size:13px;color:var(--text-dim);margin-top:10px;">Analisando seus últimos registros...</p>';
+
+  try {
+    const keysResult = await storage.list('log:');
+    if (!keysResult || !keysResult.keys || keysResult.keys.length === 0) {
+      resultado.innerHTML = '<p style="font-size:13px;color:var(--text-dim);">Ainda não há registros suficientes para analisar.</p>';
+      return;
+    }
+
+    const entries = [];
+    for (const key of keysResult.keys) {
+      try {
+        const r = await storage.get(key);
+        if (r && r.value) entries.push(JSON.parse(r.value));
+      } catch (e) {}
+    }
+    entries.sort((a, b) => a.date.localeCompare(b.date));
+    const recentes = entries.slice(-14);
+
+    if (recentes.length < 3) {
+      resultado.innerHTML = '<p style="font-size:13px;color:var(--text-dim);">Registre pelo menos 3 sessões antes de pedir uma análise — ainda não há dado suficiente pra dizer algo útil.</p>';
+      return;
+    }
+
+    const linhas = recentes.map(resumirEntradaParaAnalise).join('\n');
+
+    let linhasRefeicoes = '';
+    try {
+      const mealKeys = await storage.list('meal:');
+      if (mealKeys && mealKeys.keys && mealKeys.keys.length) {
+        const meals = [];
+        for (const key of mealKeys.keys) {
+          try {
+            const r = await storage.get(key);
+            if (r && r.value) meals.push(JSON.parse(r.value));
+          } catch (e) {}
+        }
+        meals.sort((a, b) => (a.date + a.hora).localeCompare(b.date + b.hora));
+        linhasRefeicoes = meals.slice(-30).map(resumirRefeicaoParaAnalise).join('\n');
+      }
+    } catch (e) {}
+
+    let linhasPeso = '';
+    try {
+      const weightKeys = await storage.list('weight:');
+      if (weightKeys && weightKeys.keys && weightKeys.keys.length) {
+        const pesos = [];
+        for (const key of weightKeys.keys) {
+          try {
+            const r = await storage.get(key);
+            if (r && r.value) pesos.push(JSON.parse(r.value));
+          } catch (e) {}
+        }
+        pesos.sort((a, b) => a.date.localeCompare(b.date));
+        linhasPeso = pesos.slice(-14).map(p => `${p.date}: ${p.peso}kg`).join('\n');
+      }
+    } catch (e) {}
+
+    const systemPrompt = `Você é um treinador de elite e nutricionista esportivo baseado em evidências científicas (2015-2026), atendendo um homem de 41 anos, 85kg, 176cm, ativo em musculação, incorporando corrida, com prioridades nesta ordem: cardio, mobilidade/alongamento de MMII, força, manutenção/aumento de massa muscular. Metas nutricionais: ~3050 kcal, 170g proteína, 490g carboidrato, 85g gordura (leve superávit para ganho de massa). Analise os registros recentes de treino, alimentação e peso corporal abaixo e responda em português, de forma direta e prática, em no máximo 220 palavras, com: (1) padrões que você percebeu (dor recorrente, quedas de desempenho, sono baixo, refeições puladas, proteína baixa, tendência de peso muito rápida/lenta/parada, etc), (2) 2-3 sugestões concretas de ajuste (carga, volume, deload, corrida, alimentação ou calorias), (3) um alerta se algo parecer preocupante (dor persistente ou ganho/perda de peso muito rápido, por exemplo) recomendando avaliação profissional presencial. Não invente dados que não estão nos registros.`;
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: `Registros de treino:\n${linhas}\n\nRegistros de alimentação:\n${linhasRefeicoes || '(nenhum registrado ainda)'}\n\nPeso corporal (kg):\n${linhasPeso || '(nenhum registrado ainda)'}` }]
+      })
+    });
+
+    const data = await response.json();
+    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text);
+    const texto = textBlocks.join('\n') || 'Não foi possível obter uma análise no momento.';
+
+    resultado.innerHTML = `
+      <div class="card" style="margin-top:10px;background:#10201d;border-color:var(--accent-dim);">
+        <div style="font-size:13px;line-height:1.6;white-space:pre-wrap;">${escapeHtml(texto)}</div>
+      </div>`;
+
+    // salva a análise no histórico para referência futura
+    try {
+      const date = hojeStr();
+      await storage.set('log:' + date + ':analise:' + Date.now(), JSON.stringify({ date, type: 'analise', obs: texto }));
+    } catch (e) {}
+
+  } catch (err) {
+    resultado.innerHTML = `<p style="font-size:13px;color:var(--danger);">Erro ao analisar: ${err.message}</p>`;
+  }
+}
+
+async function carregarHistorico() {
+  const lista = document.getElementById('lista');
+  const stats = document.getElementById('stats');
+  lista.innerHTML = '<div class="empty">Carregando...</div>';
+
+  try {
+    const keysResult = await storage.list('log:');
+    if (!keysResult || !keysResult.keys || keysResult.keys.length === 0) {
+      lista.innerHTML = '<div class="empty">Nenhum registro ainda. Comece na aba "Hoje".</div>';
+      stats.innerHTML = '';
+      return;
+    }
+
+    const entries = [];
+    for (const key of keysResult.keys) {
+      try {
+        const r = await storage.get(key);
+        if (r && r.value) {
+          const parsed = JSON.parse(r.value);
+          parsed._key = key;
+          entries.push(parsed);
+        }
+      } catch (e) {}
+    }
+
+    entries.sort((a, b) => (b.date + b._key).localeCompare(a.date + a._key));
+
+    const countMusc = entries.filter(e => e.type === 'musculacao').length;
+    const countCorrida = entries.filter(e => e.type === 'corrida').length;
+    const countMob = entries.filter(e => e.type === 'mobilidade').length;
+    const totalKm = entries.filter(e => e.type === 'corrida' && e.distancia)
+      .reduce((s, e) => s + parseFloat(e.distancia), 0);
+
+    stats.innerHTML = `
+      <div class="stat"><div class="n">${countMusc}</div><div class="l">Musculação</div></div>
+      <div class="stat"><div class="n">${countCorrida}</div><div class="l">Corridas</div></div>
+      <div class="stat"><div class="n">${totalKm.toFixed(1)}</div><div class="l">km total</div></div>
+      <div class="stat"><div class="n">${countMob}</div><div class="l">Mobilidade</div></div>
+    `;
+
+    lista.innerHTML = entries.slice(0, 30).map(e => {
+      const typeClass = { musculacao: 'type-musc', corrida: 'type-corrida', mobilidade: 'type-mob', descanso: 'type-desc', analise: 'type-mob' }[e.type] || '';
+      const typeLabel = { musculacao: 'Musculação', corrida: 'Corrida', mobilidade: 'Mobilidade', descanso: 'Descanso', analise: '🧠 Análise' }[e.type] || e.type;
+      let detail = '';
+      if (e.type === 'musculacao') {
+        const setsSummary = Object.entries(e.sets || {}).map(([exId, sets]) => {
+          const label = sets.map(s => s.time !== undefined ? `${s.time}s` : `${s.weight}x${s.reps}`).join(', ');
+          return `${exId}: ${label}`;
+        }).join(' · ');
+        detail = `Treino ${e.treino || '-'}<br>${escapeHtml(setsSummary)}`;
+      } else if (e.type === 'corrida') {
+        detail = `${e.distancia ? e.distancia + ' km' : ''}${e.tempo ? ' · ' + e.tempo + ' min' : ''}${e.fc ? ' · FC ' + e.fc : ''}${e.zona ? ' · ' + e.zona : ''}`;
+      } else if (e.type === 'mobilidade') {
+        let setsSummary = '';
+        if (e.sets && Object.keys(e.sets).length) {
+          setsSummary = '<br>' + Object.entries(e.sets).map(([exId, sets]) => {
+            const label = sets.map(s => s.time !== undefined ? `${s.time}s` : `${s.weight}x${s.reps}`).join(', ');
+            return `${exId}: ${escapeHtml(label)}`;
+          }).join(' · ');
+        }
+        detail = `${e.duracao ? e.duracao + ' min' : ''}${e.areas ? ' · ' + escapeHtml(e.areas) : ''}${setsSummary}`;
+      }
+      const sono = e.sono ? ` · Sono: ${e.sono}h` : '';
+      const obs = e.obs ? `<br><em>${escapeHtml(e.obs)}</em>` : '';
+      return `<div class="entry">
+        <span class="del" onclick="apagar('${e._key}')">✕</span>
+        <span class="date">${e.date}</span><span class="type ${typeClass}">${typeLabel}</span>
+        <div style="margin-top:6px;">${detail}${sono}${obs}</div>
+      </div>`;
+    }).join('');
+
+  } catch (err) {
+    lista.innerHTML = '<div class="empty">Erro ao carregar histórico: ' + err.message + '</div>';
+  }
+}
+
+async function apagar(key) {
+  try { await storage.delete(key); carregarHistorico(); } catch (e) {}
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ============ INIT ============ */
+document.getElementById('peso-data').valueAsDate = new Date();
+initDaySelect();
+</script>
+
+</body>
+</html>
