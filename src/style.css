@@ -79,16 +79,16 @@ select:focus-visible, textarea:focus-visible, .qmark:focus-visible, summary:focu
   position: absolute; inset: 0;
   background-size: cover; background-position: center;
   opacity: 0;
-  animation: slideShow 1.5s ease-in-out forwards;
+  animation: slideShow 2s ease-in-out forwards;
 }
 #splash .slide-1 { background-image: url('./assets/splash-barbell.jpg'); animation-delay: 0s; }
 #splash .slide-2 { background-image: url('./assets/splash-grip.jpg'); animation-delay: 1s; }
 #splash .slide-3 { background-image: url('./assets/splash-steel.jpg'); animation-delay: 2s; }
 @keyframes slideShow {
   0% { opacity: 0; transform: scale(1.1); }
-  12% { opacity: 1; transform: scale(1.06); }
-  85% { opacity: 1; transform: scale(1.0); }
-  100% { opacity: 0; transform: scale(0.97); }
+  35% { opacity: 1; transform: scale(1.04); }
+  65% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 0; transform: scale(0.98); }
 }
 #splash .plate {
   text-align: center;
