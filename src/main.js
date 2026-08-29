@@ -52,6 +52,6 @@ initDaySelect();
 const splash = document.getElementById('splash');
 if (splash) {
   requestAnimationFrame(() => {
-    setTimeout(() => splash.classList.add('hidden'), 650);
+    setTimeout(() => splash.classList.add('hidden'), 3000);
   });
 }
