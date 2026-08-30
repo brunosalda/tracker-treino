@@ -113,4 +113,59 @@ export function diagram1(j, label, extras) {
   </svg>`;
 }
 
+/* ============ MINI-GRÁFICOS (estatísticas) ============ */
+export function lineChartSvg(points, opts) {
+  opts = opts || {};
+  const width = opts.width || 300, height = opts.height || 110, pad = opts.pad || 12;
+  const color = opts.color || SVG_ACCENT, dim = opts.dim || SVG_DIM, unit = opts.unit || '';
+  if (!points || points.length < 2) return '';
+  const ys = points.map(p => p.y);
+  const min = Math.min(...ys), max = Math.max(...ys);
+  const range = (max - min) || 1;
+  const stepX = (width - pad * 2) / (points.length - 1);
+  const coords = points.map((p, i) => {
+    const x = pad + i * stepX;
+    const y = height - pad - ((p.y - min) / range) * (height - pad * 2);
+    return [x, y];
+  });
+  const pathD = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c[0].toFixed(1) + ',' + c[1].toFixed(1)).join(' ');
+  const dots = coords.map((c, i) => `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="3" fill="${color}"><title>${points[i].x}: ${points[i].y}${unit}</title></circle>`).join('');
+  return `<svg viewBox="0 0 ${width} ${height}" style="width:100%;max-width:${width}px;display:block;margin:0 auto;background:#0d0f14;border-radius:10px;">
+    <path d="${pathD}" fill="none" stroke="${color}" stroke-width="2"/>
+    ${dots}
+    <text x="${pad}" y="${height - 2}" fill="${dim}" font-size="9">${points[0].x}</text>
+    <text x="${width - pad}" y="${height - 2}" fill="${dim}" font-size="9" text-anchor="end">${points[points.length - 1].x}</text>
+  </svg>`;
+}
+
+export function stackedBarChartSvg(weeks, seriesKeys, seriesColors, opts) {
+  opts = opts || {};
+  const width = opts.width || 320, height = opts.height || 130, pad = opts.pad || 14, gap = opts.gap || 4;
+  if (!weeks || !weeks.length) return '';
+  const totals = weeks.map(w => seriesKeys.reduce((s, k) => s + (w.counts[k] || 0), 0));
+  const maxTotal = Math.max(1, ...totals);
+  const chartH = height - pad * 2;
+  const slotW = (width - pad * 2) / weeks.length;
+  const barW = Math.max(2, slotW - gap);
+  let bars = '';
+  weeks.forEach((w, i) => {
+    let yCursor = height - pad;
+    const x = pad + i * slotW + gap / 2;
+    seriesKeys.forEach(k => {
+      const v = w.counts[k] || 0;
+      if (!v) return;
+      const h = (v / maxTotal) * chartH;
+      yCursor -= h;
+      bars += `<rect x="${x.toFixed(1)}" y="${yCursor.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${seriesColors[k]}"><title>${w.label} — ${k}: ${v}</title></rect>`;
+    });
+  });
+  const labelEvery = Math.max(1, Math.ceil(weeks.length / 6));
+  const labels = weeks.map((w, i) => {
+    if (i % labelEvery !== 0) return '';
+    const x = pad + i * slotW + barW / 2;
+    return `<text x="${x.toFixed(1)}" y="${height - 2}" fill="${SVG_DIM}" font-size="8" text-anchor="middle">${w.label}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${width} ${height}" style="width:100%;max-width:${width}px;display:block;margin:0 auto;background:#0d0f14;border-radius:10px;">${bars}${labels}</svg>`;
+}
+
 window.toggleImgDiagram = toggleImgDiagram;

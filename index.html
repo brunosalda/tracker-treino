@@ -47,6 +47,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   <div class="tab" data-tab="garmin">Importar Garmin</div>
   <div class="tab" data-tab="biblioteca">Biblioteca</div>
   <div class="tab" data-tab="historico">Histórico</div>
+  <div class="tab" data-tab="estatisticas">Estatísticas</div>
   <div class="tab" data-tab="plano">Plano</div>
 </div>
 
@@ -215,6 +216,26 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <p style="font-size:13px;color:var(--text-dim);">Baixa um arquivo .json com todos os seus dados (treinos, refeições, peso, atividades do Garmin) — guarde em local seguro de vez em quando.</p>
     <button class="secondary" onclick="exportarBackup()">⬇️ Baixar backup completo</button>
     <div id="backup-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
+  </div>
+</div>
+
+<!-- ===================== ESTATÍSTICAS ===================== -->
+<div class="panel" id="estatisticas">
+  <div class="card">
+    <h3>Volume semanal</h3>
+    <p style="font-size:13px;color:var(--text-dim);">Sessões por semana, a partir das atividades importadas do Garmin (últimas 12 semanas).</p>
+    <div id="stats-volume-semanal"><div class="empty">Carregando...</div></div>
+  </div>
+  <div class="card">
+    <h3>Progressão de carga</h3>
+    <label>Exercício</label>
+    <select id="stats-exercicio-select" onchange="mudarExercicioEstatisticas()"></select>
+    <div id="stats-progressao-carga" style="margin-top:10px;"><div class="empty">Carregando...</div></div>
+  </div>
+  <div class="card">
+    <h3>Ritmo de corrida</h3>
+    <p style="font-size:13px;color:var(--text-dim);">Combina corridas registradas manualmente e importadas do Garmin.</p>
+    <div id="stats-ritmo-corrida"><div class="empty">Carregando...</div></div>
   </div>
 </div>
 

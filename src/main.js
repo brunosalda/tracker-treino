@@ -3,6 +3,7 @@ import { initDaySelect } from './features/workout.js';
 import { carregarHistorico } from './features/history.js';
 import { renderBiblioteca } from './features/library-view.js';
 import { renderAlimentacao, populateFoodSelect, renderPesoChart } from './features/nutrition.js';
+import { carregarEstatisticas } from './features/stats.js';
 import './features/glossary.js';
 import './features/garmin.js';
 import './features/backup.js';
@@ -34,6 +35,7 @@ function ativarTab(tabName) {
   document.getElementById(tabName).classList.add('active');
   if (tabName === 'historico') carregarHistorico();
   if (tabName === 'biblioteca') renderBiblioteca();
+  if (tabName === 'estatisticas') carregarEstatisticas();
 }
 function ativarSubtab(subtabName) {
   const el = document.querySelector(`.subtab[data-subtab="${subtabName}"]`);
