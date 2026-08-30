@@ -130,13 +130,46 @@ async function analisarSemana() {
   }
 }
 
+function classificarGarminTipo(activityType) {
+  const t = (activityType || '').toLowerCase();
+  if (t.includes('strength')) return 'musculacao';
+  if (t.includes('run')) return 'corrida';
+  return null;
+}
+
+async function buscarGarminPorData() {
+  const mapa = {};
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/garmin_activities?select=activity_type,activity_date,avg_hr,max_hr,calories,duration_text,aerobic_te`, { headers: supaHeaders() });
+    if (!res.ok) return mapa;
+    const rows = await res.json();
+    rows.forEach(a => {
+      const tipo = classificarGarminTipo(a.activity_type);
+      if (!tipo || !a.activity_date) return;
+      const dateStr = a.activity_date.slice(0, 10);
+      mapa[dateStr + ':' + tipo] = a;
+    });
+  } catch (e) {}
+  return mapa;
+}
+
+function resumirGarmin(a) {
+  const partes = [];
+  if (a.avg_hr) partes.push(`❤️ FC méd ${a.avg_hr}${a.max_hr ? ` (máx ${a.max_hr})` : ''}`);
+  if (a.calories) partes.push(`🔥 ${a.calories} kcal`);
+  if (a.duration_text) partes.push(`⏱ ${a.duration_text}`);
+  if (a.aerobic_te) partes.push(`TE ${a.aerobic_te}`);
+  if (!partes.length) return '';
+  return `<div class="set-log" style="margin-top:6px;">${partes.map(p => `<span class="chip">${p}</span>`).join('')}</div>`;
+}
+
 export async function carregarHistorico() {
   const lista = document.getElementById('lista');
   const stats = document.getElementById('stats');
   lista.innerHTML = '<div class="empty">Carregando...</div>';
 
   try {
-    const keysResult = await storage.list('log:');
+    const [keysResult, garminPorData] = await Promise.all([storage.list('log:'), buscarGarminPorData()]);
     if (!keysResult || !keysResult.keys || keysResult.keys.length === 0) {
       lista.innerHTML = '<div class="empty">Nenhum registro ainda. Comece na aba "Hoje".</div>';
       stats.innerHTML = '';
@@ -194,10 +227,13 @@ export async function carregarHistorico() {
       }
       const sono = e.sono ? ` · Sono: ${e.sono}h` : '';
       const obs = e.obs ? `<br><em>${escapeHtml(e.obs)}</em>` : '';
+      const garmin = garminPorData[e.date + ':' + e.type];
+      const garminHtml = garmin ? resumirGarmin(garmin) : '';
       return `<div class="entry">
         <span class="del" onclick="apagar('${e._key}')">✕</span>
         <span class="date">${e.date}</span><span class="type ${typeClass}">${typeLabel}</span>
         <div style="margin-top:6px;">${detail}${sono}${obs}</div>
+        ${garminHtml}
       </div>`;
     }).join('');
 
