@@ -49,6 +49,12 @@ document.querySelectorAll('.subtab').forEach(t => {
 document.getElementById('peso-data').valueAsDate = new Date();
 initDaySelect();
 
+const todayDateEl = document.getElementById('today-date');
+if (todayDateEl) {
+  const formatted = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  todayDateEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
 const splash = document.getElementById('splash');
 if (splash) {
   requestAnimationFrame(() => {

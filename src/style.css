@@ -136,6 +136,11 @@ h1 {
   letter-spacing: 0.5px; font-size: 19px; margin: 0 0 2px;
 }
 .sub { color: var(--text-dim); font-size: 12px; margin-bottom: 14px; }
+.today-date {
+  font-family: var(--font-display); font-size: 13px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-dim);
+  margin: 0 0 14px;
+}
 
 .tabs {
   display: flex; gap: 4px; margin-bottom: 14px; overflow-x: auto;
