@@ -152,8 +152,8 @@ async function salvarCorridaGarmin() {
   const status = document.getElementById('garmin-status');
   const startTime = ultimoGarminParsed && ultimoGarminParsed.startTime;
   const endTime = ultimoGarminParsed && ultimoGarminParsed.endTime;
-  // data real da atividade (pelo horário de início registrado no próprio arquivo,
-  // com a mesma regra de virada às 4h) — não a data em que você importou o arquivo
+  // data real da atividade (pelo horário de início registrado no próprio arquivo)
+  // — não a data em que você importou o arquivo
   const date = startTime ? dataDoTimestamp(startTime) : hojeStr();
   const entry = {
     date, type: 'corrida',

@@ -38,7 +38,7 @@ Existing features (current `index.html`):
 - Guided workout wizard with autosave per set.
 - Exercise library (`renderBiblioteca`).
 - Garmin import flow.
-- Day rollover logic: day changes at 4am, not midnight.
+- Day rollover: the app day changes at midnight (calendar date), matching the calendar. (Was 4am pre-redesign; changed 2026-08-30 at user request.)
 
 Constraints: single-user app, no auth/multi-tenant concerns. No native app requirement — stays a web app (PWA install/offline explicitly out of scope for now, see below).
 
