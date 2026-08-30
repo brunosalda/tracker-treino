@@ -1,6 +1,13 @@
 /* ============ ARMAZENAMENTO (Supabase — versão web publicada) ============ */
 export const SUPA_URL = "https://wcarxggugedqzfredmdd.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjYXJ4Z2d1Z2VkcXpmcmVkbWRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTgzNTEsImV4cCI6MjEwMzQzNDM1MX0.KFa565es3VGduwNIBHOMj93dfTlPoPlFE_XWvnj5frU";
+export const SUPA_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjYXJ4Z2d1Z2VkcXpmcmVkbWRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTgzNTEsImV4cCI6MjEwMzQzNDM1MX0.KFa565es3VGduwNIBHOMj93dfTlPoPlFE_XWvnj5frU";
+
+// Mantido em memória e atualizado pelo auth.js (onAuthStateChange) — evita ter que
+// tornar supaHeaders()/todo o resto do app assíncrono só pra ler o token atual.
+let currentAccessToken = null;
+export function setCurrentAccessToken(token) {
+  currentAccessToken = token;
+}
 
 function supaTableFor(key) {
   if (key.startsWith('log:')) return 'logs';
@@ -9,7 +16,7 @@ function supaTableFor(key) {
   return 'misc_kv';
 }
 export function supaHeaders(extra) {
-  return Object.assign({ apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY }, extra || {});
+  return Object.assign({ apikey: SUPA_ANON_KEY, Authorization: 'Bearer ' + (currentAccessToken || SUPA_ANON_KEY) }, extra || {});
 }
 
 export const storage = {

@@ -4,6 +4,7 @@ import { carregarHistorico } from './features/history.js';
 import { renderBiblioteca } from './features/library-view.js';
 import { renderAlimentacao, populateFoodSelect, renderPesoChart } from './features/nutrition.js';
 import { carregarEstatisticas } from './features/stats.js';
+import { initAuthGate } from './features/auth.js';
 import './features/glossary.js';
 import './features/garmin.js';
 import './features/backup.js';
@@ -52,33 +53,37 @@ function ativarSubtab(subtabName) {
   }
 }
 
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => {
-    ativarTab(t.dataset.tab);
-    salvarAbaAtiva(t.dataset.tab, document.querySelector('.subtab.active')?.dataset.subtab);
+/* ============ INIT (só depois de autenticado) ============ */
+function initApp() {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      ativarTab(t.dataset.tab);
+      salvarAbaAtiva(t.dataset.tab, document.querySelector('.subtab.active')?.dataset.subtab);
+    });
   });
-});
 
-document.querySelectorAll('.subtab').forEach(t => {
-  t.addEventListener('click', () => {
-    ativarSubtab(t.dataset.subtab);
-    salvarAbaAtiva(document.querySelector('.tab.active')?.dataset.tab, t.dataset.subtab);
+  document.querySelectorAll('.subtab').forEach(t => {
+    t.addEventListener('click', () => {
+      ativarSubtab(t.dataset.subtab);
+      salvarAbaAtiva(document.querySelector('.tab.active')?.dataset.tab, t.dataset.subtab);
+    });
   });
-});
 
-const abaSalva = lerAbaAtiva();
-if (abaSalva && abaSalva.tab && abaSalva.tab !== 'hoje') ativarTab(abaSalva.tab);
-if (abaSalva && abaSalva.subtab && abaSalva.subtab !== 'hoje-treino') ativarSubtab(abaSalva.subtab);
+  const abaSalva = lerAbaAtiva();
+  if (abaSalva && abaSalva.tab && abaSalva.tab !== 'hoje') ativarTab(abaSalva.tab);
+  if (abaSalva && abaSalva.subtab && abaSalva.subtab !== 'hoje-treino') ativarSubtab(abaSalva.subtab);
 
-/* ============ INIT ============ */
-document.getElementById('peso-data').valueAsDate = new Date();
-initDaySelect();
+  document.getElementById('peso-data').valueAsDate = new Date();
+  initDaySelect();
 
-const todayDateEl = document.getElementById('today-date');
-if (todayDateEl) {
-  const formatted = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-  todayDateEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  const todayDateEl = document.getElementById('today-date');
+  if (todayDateEl) {
+    const formatted = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    todayDateEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  }
 }
+
+initAuthGate(initApp);
 
 const splash = document.getElementById('splash');
 if (splash) {
