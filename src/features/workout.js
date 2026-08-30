@@ -30,6 +30,20 @@ async function setCorridaSemana(n) {
 }
 
 /* ============ INICIALIZAÇÃO DO DIA ============ */
+const DAY_SELECT_KEY = 'daySelectChoice';
+
+function lerEscolhaDoDia() {
+  try {
+    const raw = localStorage.getItem(DAY_SELECT_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    return saved.date === hojeStr() ? saved.value : null;
+  } catch (e) { return null; }
+}
+function salvarEscolhaDoDia(value) {
+  try { localStorage.setItem(DAY_SELECT_KEY, JSON.stringify({ date: hojeStr(), value })); } catch (e) {}
+}
+
 export function initDaySelect() {
   const sel = document.getElementById('day-select');
   const today = new Date().getDay();
@@ -38,8 +52,8 @@ export function initDaySelect() {
     { v: "corrida", l: "Corrida" }, { v: "mobilidade", l: "Mobilidade" }, { v: "descanso", l: "Descanso" }
   ];
   sel.innerHTML = opts.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
-  sel.value = DAY_TO_TYPE[today];
-  sel.addEventListener('change', () => renderWorkoutArea(sel.value));
+  sel.value = lerEscolhaDoDia() || DAY_TO_TYPE[today];
+  sel.addEventListener('change', () => { salvarEscolhaDoDia(sel.value); renderWorkoutArea(sel.value); });
   renderWorkoutArea(sel.value);
 }
 

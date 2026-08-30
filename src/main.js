@@ -6,44 +6,66 @@ import { renderAlimentacao, populateFoodSelect, renderPesoChart } from './featur
 import './features/glossary.js';
 import './features/garmin.js';
 
-/* ============ REABRIR "APP" NA TELA DE INICIO (iOS) ============
-   No iOS, o app adicionado a Tela de Inicio (modo standalone) costuma
-   ficar suspenso em segundo plano em vez de recarregar — reabrir só
-   "acorda" a página antiga, sem buscar dados novos do Supabase. Isso
-   força uma recarga sempre que o app volta a ficar visível. */
-window.addEventListener('pageshow', function (event) {
-  if (event.persisted) location.reload();
-});
-document.addEventListener('visibilitychange', function () {
-  if (document.visibilityState === 'visible') location.reload();
-});
+/* ============ MANTER O APP ONDE VOCÊ DEIXOU (iOS standalone) ============
+   Minimizar e reabrir o app (adicionado à Tela de Início) NÃO deve parecer
+   um recarregamento — é o app continuando de onde parou, como qualquer
+   app nativo. Por isso não forçamos reload em pageshow/visibilitychange;
+   quando o WebKit realmente descarta o processo em segundo plano (memória
+   baixa), o JS reinicia do zero de qualquer forma, e restauramos a aba e
+   sub-aba ativas abaixo (o wizard de treino já tem seu próprio resume via
+   localStorage, ver wizardResume em workout.js). */
+const TAB_STATE_KEY = 'activeTabState';
+
+function salvarAbaAtiva(tab, subtab) {
+  try { localStorage.setItem(TAB_STATE_KEY, JSON.stringify({ tab, subtab })); } catch (e) {}
+}
+function lerAbaAtiva() {
+  try { return JSON.parse(localStorage.getItem(TAB_STATE_KEY)) || null; } catch (e) { return null; }
+}
 
 /* ============ TABS ============ */
+function ativarTab(tabName) {
+  const el = document.querySelector(`.tab[data-tab="${tabName}"]`);
+  if (!el) return;
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(tabName).classList.add('active');
+  if (tabName === 'historico') carregarHistorico();
+  if (tabName === 'biblioteca') renderBiblioteca();
+}
+function ativarSubtab(subtabName) {
+  const el = document.querySelector(`.subtab[data-subtab="${subtabName}"]`);
+  if (!el) return;
+  document.querySelectorAll('.subtab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.subpanel').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(subtabName).classList.add('active');
+  if (subtabName === 'hoje-alimentacao') {
+    renderAlimentacao();
+    populateFoodSelect('calc-food-select');
+    populateFoodSelect('calc-food-select-2');
+    renderPesoChart();
+  }
+}
+
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById(t.dataset.tab).classList.add('active');
-    if (t.dataset.tab === 'historico') carregarHistorico();
-    if (t.dataset.tab === 'biblioteca') renderBiblioteca();
+    ativarTab(t.dataset.tab);
+    salvarAbaAtiva(t.dataset.tab, document.querySelector('.subtab.active')?.dataset.subtab);
   });
 });
 
 document.querySelectorAll('.subtab').forEach(t => {
   t.addEventListener('click', () => {
-    document.querySelectorAll('.subtab').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.subpanel').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById(t.dataset.subtab).classList.add('active');
-    if (t.dataset.subtab === 'hoje-alimentacao') {
-      renderAlimentacao();
-      populateFoodSelect('calc-food-select');
-      populateFoodSelect('calc-food-select-2');
-      renderPesoChart();
-    }
+    ativarSubtab(t.dataset.subtab);
+    salvarAbaAtiva(document.querySelector('.tab.active')?.dataset.tab, t.dataset.subtab);
   });
 });
+
+const abaSalva = lerAbaAtiva();
+if (abaSalva && abaSalva.tab && abaSalva.tab !== 'hoje') ativarTab(abaSalva.tab);
+if (abaSalva && abaSalva.subtab && abaSalva.subtab !== 'hoje-treino') ativarSubtab(abaSalva.subtab);
 
 /* ============ INIT ============ */
 document.getElementById('peso-data').valueAsDate = new Date();
