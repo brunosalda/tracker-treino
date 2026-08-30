@@ -1,6 +1,6 @@
 import { FOODS, MEALS } from '../data/nutrition-data.js';
 import { storage } from '../lib/storage.js';
-import { hojeStr } from '../lib/date-utils.js';
+import { hojeStr, hojeRefeicaoStr } from '../lib/date-utils.js';
 import { escapeHtml } from '../lib/dom-utils.js';
 import { SVG_ACCENT, SVG_DIM } from '../lib/svg-helpers.js';
 
@@ -151,7 +151,7 @@ export async function renderPesoChart() {
 }
 
 export async function renderAlimentacao() {
-  const date = hojeStr();
+  const date = hojeRefeicaoStr();
   const area = document.getElementById('refeicoes-area');
   area.innerHTML = '<div class="empty">Carregando refeições...</div>';
 
@@ -240,7 +240,7 @@ export async function abrirInputRefeicao(mealId, editando) {
   let existente = {};
   if (editando) {
     try {
-      const r = await storage.get('meal:' + hojeStr() + ':' + mealId);
+      const r = await storage.get('meal:' + hojeRefeicaoStr() + ':' + mealId);
       if (r && r.value) existente = JSON.parse(r.value);
     } catch (e) {}
   }
@@ -286,7 +286,7 @@ export async function salvarRefeicao(mealId) {
   const sensacao = document.getElementById(`input-sens-${mealId}`).value || '';
   const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const ts = new Date().toISOString(); // timestamp exato — dá pra cruzar com FC/atividade do Garmin depois
-  const date = hojeStr();
+  const date = hojeRefeicaoStr();
 
   try {
     await storage.set('meal:' + date + ':' + mealId, JSON.stringify({ descricao, proteina, carboidrato, gordura, sensacao, hora, ts, date, mealId }));
@@ -298,7 +298,7 @@ export async function salvarRefeicao(mealId) {
 
 export async function apagarRefeicao(mealId) {
   try {
-    await storage.delete('meal:' + hojeStr() + ':' + mealId);
+    await storage.delete('meal:' + hojeRefeicaoStr() + ':' + mealId);
     renderAlimentacao();
   } catch (e) {}
 }
@@ -325,7 +325,7 @@ export async function aplicarImportacaoRapida() {
 
   const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const ts = new Date().toISOString();
-  const date = hojeStr();
+  const date = hojeRefeicaoStr();
 
   try {
     await storage.set('meal:' + date + ':' + mealId, JSON.stringify({
