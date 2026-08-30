@@ -208,6 +208,12 @@ input[type="file"] { color: var(--text-dim); }
 input[type="number"] { -moz-appearance: textfield; }
 .row { display: flex; gap: 10px; }
 .row > div { flex: 1; min-width: 0; }
+@media (max-width: 480px) {
+  /* input[type=date] no Safari/iOS renderiza no formato de data por extenso do
+     idioma do aparelho (ex: "30 Aug 2026"), que pode ser bem mais largo que o
+     campo — empilha em vez de dividir a linha pra nunca sobrepor o campo ao lado. */
+  .row { flex-direction: column; }
+}
 
 button {
   padding: 12px 18px; border-radius: var(--radius-sm); border: 1px solid transparent;
