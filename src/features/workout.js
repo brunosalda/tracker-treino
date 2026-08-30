@@ -59,24 +59,28 @@ async function renderWorkoutArea(type) {
     const prog = PROGRAM[type];
     area.innerHTML = `
       <div class="card">
-        <h3>Aquecimento (antes de começar) — ~10-12 min</h3>
-        <ol style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
-          <li><strong>Geral (5 min):</strong> esteira, bike ou polichinelos em ritmo leve, só pra subir a temperatura e ativar o corpo.</li>
-          <li><strong>Mobilidade dinâmica (3-5 min):</strong> balanços de perna, agachamento com rotação de tronco, círculos de quadril e ombro — nada de alongamento estático longo aqui.</li>
-          <li><strong>Séries de aproximação:</strong> nos exercícios marcados com 🔥 abaixo, faça 2-3 séries subindo a carga gradualmente até chegar no peso de trabalho — o app já calcula isso pra você com base na sua última sessão.</li>
-        </ol>
-        <p style="font-size:12px;color:var(--danger);margin:4px 0 0;">Nunca comece um exercício composto pesado direto na carga de trabalho, mesmo já aquecido de forma geral.</p>
+        <details>
+          <summary>Aquecimento (antes de começar) — ~10-12 min</summary>
+          <ol style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+            <li><strong>Geral (5 min):</strong> esteira, bike ou polichinelos em ritmo leve, só pra subir a temperatura e ativar o corpo.</li>
+            <li><strong>Mobilidade dinâmica (3-5 min):</strong> balanços de perna, agachamento com rotação de tronco, círculos de quadril e ombro — nada de alongamento estático longo aqui.</li>
+            <li><strong>Séries de aproximação:</strong> nos exercícios marcados com 🔥 abaixo, faça 2-3 séries subindo a carga gradualmente até chegar no peso de trabalho — o app já calcula isso pra você com base na sua última sessão.</li>
+          </ol>
+          <p style="font-size:12px;color:var(--danger);margin:4px 0 0;">Nunca comece um exercício composto pesado direto na carga de trabalho, mesmo já aquecido de forma geral.</p>
+        </details>
       </div>
       <div class="card">
         <h3>${prog.label} — ~35-40 min</h3>
-        <h4>Diretrizes de hoje</h4>
-        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
-          <li>Faça todas as séries entre <strong>RIR 0–3</strong><span class="qmark" onclick="abrirGlossario('rir')">?</span> (perto da falha, sem chegar sempre até zero).</li>
-          <li>Descanso conforme indicado em cada exercício — compostos pesados (agachamento, RDL, leg press) precisam de mais tempo que isolados.</li>
-          <li><strong>Progressão:</strong> suba a carga quando completar o topo da faixa de reps com técnica limpa em <em>todas</em> as séries do exercício.</li>
-          <li><strong>Deload:</strong><span class="qmark" onclick="abrirGlossario('deload')">?</span> a cada 4 semanas, considere 1 semana com ~40–50% do volume (menos séries) se sentir fadiga acumulada, dor persistente ou queda de desempenho.</li>
-          <li>Amplitude completa (ROM<span class="qmark" onclick="abrirGlossario('rom')">?</span> total) em todos os exercícios — é parte do estímulo de hipertrofia e também trabalha sua mobilidade.</li>
-        </ul>
+        <details>
+          <summary>Diretrizes de hoje</summary>
+          <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+            <li>Faça todas as séries entre <strong>RIR 0–3</strong><span class="qmark" onclick="abrirGlossario('rir')">?</span> (perto da falha, sem chegar sempre até zero).</li>
+            <li>Descanso conforme indicado em cada exercício — compostos pesados (agachamento, RDL, leg press) precisam de mais tempo que isolados.</li>
+            <li><strong>Progressão:</strong> suba a carga quando completar o topo da faixa de reps com técnica limpa em <em>todas</em> as séries do exercício.</li>
+            <li><strong>Deload:</strong><span class="qmark" onclick="abrirGlossario('deload')">?</span> a cada 4 semanas, considere 1 semana com ~40–50% do volume (menos séries) se sentir fadiga acumulada, dor persistente ou queda de desempenho.</li>
+            <li>Amplitude completa (ROM<span class="qmark" onclick="abrirGlossario('rom')">?</span> total) em todos os exercícios — é parte do estímulo de hipertrofia e também trabalha sua mobilidade.</li>
+          </ul>
+        </details>
       </div>
       <div id="wizard-area"></div>
       <div class="card">
@@ -106,20 +110,24 @@ async function renderWorkoutArea(type) {
           </div>
         </div>
         <div class="suggestion">Meta de hoje: ${plano[subtipo]}</div>
-        <h4>Aquecimento antes de correr</h4>
-        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
-          <li>5 min de caminhada rápida ou trote bem leve.</li>
-          <li>Skipping baixo, elevação de joelho e chute no glúteo, 20-30s cada, leve.</li>
-          <li>2-3 balanços dinâmicos de perna (frente/trás e lateral) por lado — nada de alongamento estático longo aqui.</li>
-          <li>Comece a corrida principal em ritmo ainda mais leve que o alvo por 3-5 min antes de assumir o ritmo da zona.</li>
-        </ul>
-        <h4>Diretrizes</h4>
-        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
-          <li>Zona 1<span class="qmark" onclick="abrirGlossario('zona')">?</span> = ritmo em que você consegue conversar frases inteiras sem ofegar.</li>
-          <li>Se notar "passada longa" (pé aterrissando muito à frente do corpo), aumente a cadência em 5–10%.</li>
-          <li>Avance de semana só quando a atual estiver confortável — sem dor articular, sem fadiga excessiva no dia seguinte.</li>
-          <li>Após a semana 4, repita o padrão da semana 4 aumentando ~10%/semana enquanto estiver confortável.</li>
-        </ul>
+        <details>
+          <summary>Aquecimento antes de correr</summary>
+          <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+            <li>5 min de caminhada rápida ou trote bem leve.</li>
+            <li>Skipping baixo, elevação de joelho e chute no glúteo, 20-30s cada, leve.</li>
+            <li>2-3 balanços dinâmicos de perna (frente/trás e lateral) por lado — nada de alongamento estático longo aqui.</li>
+            <li>Comece a corrida principal em ritmo ainda mais leve que o alvo por 3-5 min antes de assumir o ritmo da zona.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Diretrizes</summary>
+          <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+            <li>Zona 1<span class="qmark" onclick="abrirGlossario('zona')">?</span> = ritmo em que você consegue conversar frases inteiras sem ofegar.</li>
+            <li>Se notar "passada longa" (pé aterrissando muito à frente do corpo), aumente a cadência em 5–10%.</li>
+            <li>Avance de semana só quando a atual estiver confortável — sem dor articular, sem fadiga excessiva no dia seguinte.</li>
+            <li>Após a semana 4, repita o padrão da semana 4 aumentando ~10%/semana enquanto estiver confortável.</li>
+          </ul>
+        </details>
         ${acaoImagemVideo(DIAGRAMS['corrida-postura'], 'postura de corrida cadência')}
         <p style="font-size:13px;color:var(--text-dim);">Registre rápido aqui, ou use a aba <strong>Importar Garmin</strong> depois do treino para preencher automaticamente.</p>
         <label>Distância (km)</label><input type="number" step="0.01" id="q-dist">
@@ -130,15 +138,17 @@ async function renderWorkoutArea(type) {
       <div class="card">
         <h3>Depois de correr (~25-30 min)</h3>
         <p style="font-size:13px;color:var(--text-dim);">Não é pra correr mais tempo pra "completar a hora" — isso aumentaria o risco de lesão fora da progressão segura. Em vez disso, complete a sessão com isto:</p>
-        <h4>Mobilidade complementar (15-20 min)</h4>
+        <div class="cat-header" style="margin-top:14px;">Mobilidade complementar (15-20 min)</div>
         ${LIBRARY.mobilidade.items.filter(i => ['mob-quadril', 'mob-isquio', 'mob-adutor', 'mob-tornozelo'].includes(i.id)).map(i => renderMobilidadeItem(i, 45, "2-3 séries de 30-60s", "corrida")).join('')}
-        <h4 style="margin-top:14px;">Ativação leve para corredores (5-10 min)</h4>
-        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
-          <li>Panturrilha isométrica (parede) — 3x20-30s.</li>
-          <li>Ponte de glúteo (glute bridge) — 2x12-15.</li>
-          <li>Prancha — 2x30-40s.</li>
-        </ul>
-        <p style="font-size:12px;color:var(--text-dim);">Trabalho leve, não-fatigante — melhora economia de corrida sem interferir na recuperação (Denadai et al., 2017; Eihara et al., 2022; Seção 3).</p>
+        <details>
+          <summary>Ativação leve para corredores (5-10 min)</summary>
+          <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+            <li>Panturrilha isométrica (parede) — 3x20-30s.</li>
+            <li>Ponte de glúteo (glute bridge) — 2x12-15.</li>
+            <li>Prancha — 2x30-40s.</li>
+          </ul>
+          <p style="font-size:12px;color:var(--text-dim);">Trabalho leve, não-fatigante — melhora economia de corrida sem interferir na recuperação (Denadai et al., 2017; Eihara et al., 2022; Seção 3).</p>
+        </details>
       </div>`;
     finalizar.style.display = 'block';
 
@@ -154,19 +164,25 @@ async function renderWorkoutArea(type) {
       </div>
 
       <div class="card">
-        <h4 style="margin:0 0 4px;color:var(--accent);">Fase 1 — Aquecimento leve (5 min)</h4>
-        <p style="font-size:12px;color:var(--text-dim);">Caminhada ou bike bem leve, só pra subir a temperatura antes de alongar.</p>
+        <details>
+          <summary>Fase 1 — Aquecimento leve (5 min)</summary>
+          <p style="font-size:12px;color:var(--text-dim);">Caminhada ou bike bem leve, só pra subir a temperatura antes de alongar.</p>
+        </details>
       </div>
 
       <div class="card">
-        <h4 style="margin:0 0 4px;color:var(--accent);">Fase 2 — Alongamento estático completo (25-30 min)</h4>
-        <p style="font-size:12px;color:var(--text-dim);">3 séries de 45-60s por lado, cada região.</p>
+        <details>
+          <summary>Fase 2 — Alongamento estático completo (25-30 min)</summary>
+          <p style="font-size:12px;color:var(--text-dim);">3 séries de 45-60s por lado, cada região.</p>
+        </details>
       </div>
       ${alongamentos.map(i => renderMobilidadeItem(i, 50, "3 séries de 45-60s", "dedicada")).join('')}
 
       <div class="card">
-        <h4 style="margin:0 0 4px;color:var(--accent);">Fase 3 — Circuito de estabilidade e core (15-20 min)</h4>
-        <p style="font-size:12px;color:var(--text-dim);">Carga leve, foco em controle. Glúteo médio e core são pontos-chave de prevenção de lesão em corredores (Seção 3 e 9) — justifica o treino ser aqui na academia, não só alongamento.</p>
+        <details>
+          <summary>Fase 3 — Circuito de estabilidade e core (15-20 min)</summary>
+          <p style="font-size:12px;color:var(--text-dim);">Carga leve, foco em controle. Glúteo médio e core são pontos-chave de prevenção de lesão em corredores (Seção 3 e 9) — justifica o treino ser aqui na academia, não só alongamento.</p>
+        </details>
       </div>
       <div id="wizard-area"></div>
 
