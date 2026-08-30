@@ -174,9 +174,9 @@ async function renderWorkoutArea(type) {
         <details>
           <summary>Fase 2 — Alongamento estático completo (25-30 min)</summary>
           <p style="font-size:12px;color:var(--text-dim);">3 séries de 45-60s por lado, cada região.</p>
+          ${alongamentos.map(i => renderMobilidadeItem(i, 50, "3 séries de 45-60s", "dedicada")).join('')}
         </details>
       </div>
-      ${alongamentos.map(i => renderMobilidadeItem(i, 50, "3 séries de 45-60s", "dedicada")).join('')}
 
       <div class="card">
         <details>
