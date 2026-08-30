@@ -1,6 +1,6 @@
 {
-  "name": "Tracker de Treino",
-  "short_name": "Treino",
+  "name": "TrainingHub",
+  "short_name": "TrainingHub",
   "description": "Musculação, corrida e mobilidade — registro e progressão",
   "start_url": "/",
   "scope": "/",
