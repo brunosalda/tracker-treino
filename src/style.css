@@ -207,7 +207,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 input[type="file"] { color: var(--text-dim); }
 input[type="number"] { -moz-appearance: textfield; }
 .row { display: flex; gap: 10px; }
-.row > div { flex: 1; }
+.row > div { flex: 1; min-width: 0; }
 
 button {
   padding: 12px 18px; border-radius: var(--radius-sm); border: 1px solid transparent;
