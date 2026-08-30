@@ -199,7 +199,7 @@ select {
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
 }
-input[type="date"] { position: relative; }
+input[type="date"] { position: relative; max-width: 100%; overflow: hidden; }
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(70%) sepia(60%) saturate(500%) hue-rotate(0deg) brightness(1.05);
   cursor: pointer;
