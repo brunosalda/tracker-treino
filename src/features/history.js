@@ -105,6 +105,11 @@ async function analisarSemana() {
 
     const data = await response.json();
     if (!response.ok || data.error) {
+      const semCreditoOuChave = (data.detail || '').includes('credit balance') || (data.error || '').includes('ANTHROPIC_API_KEY');
+      if (semCreditoOuChave) {
+        resultado.innerHTML = `<p style="font-size:13px;color:var(--text-dim);">Análise por IA ainda não configurada (falta crédito/chave da API na Anthropic) — o resto do app funciona normalmente sem isso.</p>`;
+        return;
+      }
       throw new Error(data.error || `Falha na análise (status ${response.status})`);
     }
     const texto = data.texto || 'Não foi possível obter uma análise no momento.';
