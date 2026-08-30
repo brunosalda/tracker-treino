@@ -210,6 +210,12 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <h3>Últimos registros</h3>
     <div id="lista"></div>
   </div>
+  <div class="card">
+    <h3>Backup</h3>
+    <p style="font-size:13px;color:var(--text-dim);">Baixa um arquivo .json com todos os seus dados (treinos, refeições, peso, atividades do Garmin) — guarde em local seguro de vez em quando.</p>
+    <button class="secondary" onclick="exportarBackup()">⬇️ Baixar backup completo</button>
+    <div id="backup-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
+  </div>
 </div>
 
 <!-- ===================== PLANO ===================== -->

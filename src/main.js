@@ -5,6 +5,7 @@ import { renderBiblioteca } from './features/library-view.js';
 import { renderAlimentacao, populateFoodSelect, renderPesoChart } from './features/nutrition.js';
 import './features/glossary.js';
 import './features/garmin.js';
+import './features/backup.js';
 
 /* ============ MANTER O APP ONDE VOCÊ DEIXOU (iOS standalone) ============
    Minimizar e reabrir o app (adicionado à Tela de Início) NÃO deve parecer
