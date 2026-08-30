@@ -207,7 +207,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 input[type="file"] { color: var(--text-dim); }
 input[type="number"] { -moz-appearance: textfield; }
 .row { display: flex; gap: 10px; }
-.row > div { flex: 1; min-width: 0; }
+.row > div { flex: 1; min-width: 0; overflow: hidden; border-radius: var(--radius-sm); }
 @media (max-width: 480px) {
   /* input[type=date] no Safari/iOS renderiza no formato de data por extenso do
      idioma do aparelho (ex: "30 Aug 2026"), que pode ser bem mais largo que o
