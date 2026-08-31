@@ -2,348 +2,81 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="TrainingHub">
-  <meta name="theme-color" content="#15171a">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Musculação, corrida, mobilidade e alimentação num só lugar — registre um treino inteiro em segundos e revise seu progresso com clareza.">
+<meta name="theme-color" content="#15171a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="icon" type="image/png" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/manifest.webmanifest">
 <title>TrainingHub</title>
+<link rel="stylesheet" href="/src/landing.css">
 </head>
 <body>
-<!--
-THESIS: The gym's own steel rack signage becomes the interface — refusing the soft-gradient wellness-app default.
-OWN-WORLD: Charcoal-steel ground, brushed-steel placards, hazard-yellow stencil accent reserved for the active/primary value only, oxide-red for destructive actions, condensed display type for numbers, workhorse sans for body, hard 4-6px corners, rivets on the splash plate only.
-STORY: Mid-set, glance and log a number, see it stamp into place; later at a desk, read a steel dashboard of real progress.
-FIRST VIEWPORT: "Hoje" tab — rack-tab strip along the top (active tab extends in hazard yellow), steel placards below for today's session.
-FORM: Assigned direction "Placar de Ferro" (industrial gym signage), grounded candidate 5/7, seed 057f8bdf. Raised by: depot-blind fault state, streaming-wall focus disclosure (details[open] lift), acetate-manual tab extension, cloud-quarry block gaps, iridescent-cloud color restraint, split-flap cascade signature (chip/value stamp-in).
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
--->
 
-<div id="splash">
-  <div class="slide slide-1"></div>
-  <div class="slide slide-2"></div>
-  <div class="slide slide-3"></div>
-  <div class="plate">
-    <svg class="plate-icon" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">
-      <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="3"/>
-      <circle cx="16" cy="16" r="4" fill="currentColor"/>
-    </svg>
-    <div class="mark">TrainingHub</div>
-    <div class="sub">carregando sessão de hoje</div>
+<header class="nav">
+  <div class="nav-mark">
+    <img src="/icon-192.png" alt="" width="28" height="28">
+    <span>TrainingHub</span>
   </div>
-</div>
+  <a class="nav-enter" href="/app">Entrar</a>
+</header>
 
-<div id="auth-screen" class="hidden">
-  <div class="auth-box">
-    <div class="mark">TrainingHub</div>
-
-    <div class="auth-form active" id="auth-login">
-      <label>Email</label>
-      <input type="email" id="auth-email" autocomplete="username" placeholder="voce@email.com">
-      <label>Senha</label>
-      <input type="password" id="auth-password" autocomplete="current-password">
-      <button class="big" onclick="fazerLogin()">Entrar</button>
-      <div class="auth-link" onclick="mostrarFormEsqueciSenha()">Esqueci minha senha</div>
-      <div class="auth-status" id="auth-login-status"></div>
-    </div>
-
-    <div class="auth-form" id="auth-forgot">
-      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Digite seu email pra receber um link de recuperação de senha.</p>
-      <label>Email</label>
-      <input type="email" id="auth-forgot-email" autocomplete="username" placeholder="voce@email.com">
-      <button class="big" onclick="enviarRecuperacaoSenha()">Enviar link de recuperação</button>
-      <div class="auth-link" onclick="mostrarFormLogin()">Voltar ao login</div>
-      <div class="auth-status" id="auth-forgot-status"></div>
-    </div>
-
-    <div class="auth-form" id="auth-newpass">
-      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Defina sua senha de acesso.</p>
-      <label>Nova senha</label>
-      <input type="password" id="auth-newpass-1" autocomplete="new-password">
-      <label>Confirmar nova senha</label>
-      <input type="password" id="auth-newpass-2" autocomplete="new-password">
-      <button class="big" onclick="salvarNovaSenha()">Salvar nova senha</button>
-      <div class="auth-status" id="auth-newpass-status"></div>
+<section class="hero">
+  <div class="hero-scrim"></div>
+  <div class="hero-content">
+    <p class="eyebrow">Treino registrado de verdade</p>
+    <h1>TrainingHub</h1>
+    <p class="lede">Musculação, corrida, mobilidade e alimentação num só lugar — registre um treino inteiro em segundos, no meio da série, e revise seu progresso depois com clareza.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="/app">Entrar</a>
+      <a class="btn btn-ghost" href="#acesso">Pedir acesso</a>
     </div>
   </div>
-</div>
+</section>
 
-<div id="app-root" style="display:none;">
-
-<h1>TrainingHub</h1>
-<div class="sub">Musculação · Corrida · Mobilidade — registro e progressão</div>
-<div class="account-bar">
-  <span id="account-email"></span>
-  <span class="links">
-    <span class="link" onclick="abrirAlterarSenha()">Alterar senha</span>
-    <span class="link" onclick="sair()">Sair</span>
-  </span>
-</div>
-
-<div class="tabs">
-  <div class="tab active" data-tab="hoje">Hoje</div>
-  <div class="tab" data-tab="garmin">Importar Garmin</div>
-  <div class="tab" data-tab="biblioteca">Biblioteca</div>
-  <div class="tab" data-tab="historico">Histórico</div>
-  <div class="tab" data-tab="estatisticas">Estatísticas</div>
-  <div class="tab" data-tab="plano">Plano</div>
-</div>
-
-<!-- ===================== HOJE ===================== -->
-<div class="panel active" id="hoje">
-  <div class="today-date" id="today-date"></div>
-  <div class="tabs" style="position:static;padding:0;margin-bottom:12px;">
-    <div class="subtab active" data-subtab="hoje-treino">🏋️ Treino</div>
-    <div class="subtab" data-subtab="hoje-alimentacao">🍽️ Alimentação</div>
-  </div>
-
-  <!-- ---- SUB-ABA: TREINO ---- -->
-  <div class="subpanel active" id="hoje-treino">
-    <div class="card">
-      <label>Sessão de hoje</label>
-      <select id="day-select"></select>
+<section class="features">
+  <div class="features-inner">
+    <div class="feature">
+      <div class="feature-n">01</div>
+      <h3>Sessão guiada, sem fricção</h3>
+      <p>Um passo de cada vez, exercício por exercício — cada série já é salva sozinha assim que você registra. Nada de procurar onde parou no meio do treino.</p>
     </div>
-
-    <div id="workout-area"></div>
-
-    <div class="card" id="finalizar-card" style="display:none;">
-      <label>Sono na noite anterior (h)</label>
-      <input type="number" step="0.5" id="f-sono">
-      <label>Observações da sessão (dor, dificuldade, sensação — uso isso pra sugerir ajustes)</label>
-      <textarea id="f-obs" placeholder="Ex: joelho doeu levemente no agachamento, treino pareceu mais pesado que o normal..."></textarea>
-      <button class="big" onclick="encerrarTreino()">Encerrar treino</button>
-      <div id="status"></div>
+    <div class="feature">
+      <div class="feature-n">02</div>
+      <h3>Corrida e musculação juntas</h3>
+      <p>Sincronize com o Garmin e veja frequência cardíaca, calorias e training effect direto ao lado do registro manual daquele mesmo dia — sem trocar de app pra cruzar os dados.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-n">03</div>
+      <h3>Alimentação sem planilha</h3>
+      <p>Calculadora de porções por proteína e um atalho de importação rápida — registrar uma refeição leva um texto colado, não uma planilha de macros.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-n">04</div>
+      <h3>Progresso real, não só números</h3>
+      <p>Volume semanal, progressão de carga por exercício, ritmo de corrida — gráficos que mostram tendência ao longo de semanas, não só o número solto do dia.</p>
     </div>
   </div>
+</section>
 
-  <!-- ---- SUB-ABA: ALIMENTAÇÃO ---- -->
-  <div class="subpanel" id="hoje-alimentacao">
-    <div class="card">
-      <h3>Peso corporal</h3>
-      <p style="font-size:13px;color:var(--text-dim);">Pese-se 2x/semana, mesma hora, mesma condição (ex: em jejum, ao acordar). O que importa é a tendência de 2-3 semanas, não o dia isolado.</p>
-      <div class="row">
-        <div>
-          <label>Data</label>
-          <input type="date" id="peso-data">
-        </div>
-        <div>
-          <label>Peso (kg)</label>
-          <input type="number" step="0.1" id="peso-valor" placeholder="Ex: 85.2">
-        </div>
-      </div>
-      <button class="big" onclick="salvarPeso()">Registrar peso</button>
-      <div id="peso-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
-      <div id="peso-chart-area" style="margin-top:12px;"></div>
-    </div>
-
-    <div class="card">
-      <h3>Meta nutricional de hoje</h3>
-      <div class="stat-grid">
-        <div class="stat"><div class="n">~3050</div><div class="l">kcal</div></div>
-        <div class="stat"><div class="n">170g</div><div class="l">Proteína</div></div>
-        <div class="stat"><div class="n">490g</div><div class="l">Carboidrato</div></div>
-        <div class="stat"><div class="n">85g</div><div class="l">Gordura</div></div>
-      </div>
-      <details>
-        <summary>Regras gerais</summary>
-        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
-          <li>Não existe "janela anabólica" rígida — o total do dia importa muito mais que o horário exato.</li>
-          <li>Creatina: 3–5g todo dia (inclusive em dias de descanso).</li>
-          <li>Cafeína: 3–6mg/kg, 30–60min antes do treino/corrida, se tolerar.</li>
-          <li>Hidratação: perder mais de 2% do peso em água prejudica desempenho — beba antes de sentir sede.</li>
-        </ul>
-      </details>
-    </div>
-
-    <div class="card">
-      <h3>Importar refeição rápido</h3>
-      <p style="font-size:13px;color:var(--text-dim);">Cole aqui o código que o Claude te passar no chat depois de calcular sua refeição por foto — preenche tudo sozinho.</p>
-      <textarea id="quick-import-input" placeholder="cafe|Banana 127g, aveia 62g, whey 25g|22|82|5|" style="min-height:60px;"></textarea>
-      <button class="big" onclick="aplicarImportacaoRapida()">Aplicar</button>
-      <div id="quick-import-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
-    </div>
-
-    <div class="card">
-      <h3>Progresso de hoje</h3>
-      <div class="stat-grid" id="alimentacao-progresso"></div>
-      <div class="cat-header" style="margin:14px 0 6px;">Falta para a meta</div>
-      <div class="stat-grid" id="alimentacao-faltando"></div>
-    </div>
-
-    <div class="card">
-      <h3>Calculadora de porções</h3>
-      <p style="font-size:13px;color:var(--text-dim);">Valores de referência aproximados — variam por marca e modo de preparo. Use como estimativa, não como precisão de laboratório.</p>
-
-      <h4>Modo 1 — "Preciso de X gramas de proteína, quanto eu como?"</h4>
-      <label>Alimento</label>
-      <select id="calc-food-select"></select>
-      <label>Meta de proteína para essa refeição (g)</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
-        <button class="secondary" style="padding:6px 10px;font-size:12px;" onclick="document.getElementById('calc-prot-alvo').value=35">35g (café)</button>
-        <button class="secondary" style="padding:6px 10px;font-size:12px;" onclick="document.getElementById('calc-prot-alvo').value=40">40g (almoço/jantar)</button>
-        <button class="secondary" style="padding:6px 10px;font-size:12px;" onclick="document.getElementById('calc-prot-alvo').value=25">25g (lanche)</button>
-      </div>
-      <input type="number" id="calc-prot-alvo" placeholder="Ex: 35">
-      <button class="big" onclick="calcularPorProteina()">Calcular quantidade</button>
-      <div id="calc-resultado"></div>
-
-      <h4 style="margin-top:20px;">Modo 2 — "Vou comer X gramas, quanto isso dá?"</h4>
-      <label>Alimento</label>
-      <select id="calc-food-select-2"></select>
-      <label>Quantidade que você vai comer</label>
-      <input type="number" id="calc-qtd" placeholder="Ex: 150">
-      <button class="big" onclick="calcularPorQuantidade()">Calcular macros</button>
-      <div id="calc-resultado-2"></div>
-    </div>
-
-    <div id="refeicoes-area"></div>
+<section class="access" id="acesso">
+  <div class="access-inner">
+    <h2>Acesso por convite</h2>
+    <p>O TrainingHub ainda não está aberto ao público — cada conta é liberada manualmente. Deixe seu email que a gente avisa quando abrir uma vaga.</p>
+    <form id="access-form">
+      <input type="email" id="access-email" placeholder="voce@email.com" required autocomplete="email">
+      <button type="submit" class="btn btn-primary">Pedir acesso</button>
+    </form>
+    <div class="access-status" id="access-status"></div>
   </div>
-</div>
+</section>
 
-<!-- ===================== GARMIN ===================== -->
-<div class="panel" id="garmin">
-  <div class="card">
-    <h3>Como exportar do Garmin Connect</h3>
-    <details open>
-      <summary>Passo a passo (primeira vez)</summary>
-      <ul>
-        <li><strong>O app do Garmin Connect não tem opção de exportar</strong> — a Garmin removeu isso do app de propósito. Exportar só funciona pelo site, mas o site funciona normalmente no navegador do celular (Chrome/Safari), não precisa de computador.</li>
-        <li>Abra <strong>connect.garmin.com</strong> no navegador do celular (ou computador) e faça login.</li>
-        <li>Toque em "Atividades" e abra a atividade que você quer importar.</li>
-        <li>Toque no ícone de engrenagem (⚙) ou nos três pontinhos no canto superior direito da atividade → <strong>"Exportar para TCX"</strong>.</li>
-        <li>O arquivo .TCX vai para a pasta de Downloads (Android) ou app Arquivos (iPhone).</li>
-        <li>Volte aqui e toque em "Escolher arquivo" abaixo, selecionando o .TCX exportado.</li>
-      </ul>
-      <p>Se só tiver .GPX, também funciona — a frequência cardíaca pode não vir completa dependendo do relógio.</p>
-    </details>
-  </div>
+<footer class="foot">
+  <span>TrainingHub</span>
+  <a href="/app">Entrar</a>
+</footer>
 
-  <div class="card">
-    <h3>Importar arquivo (TCX<span class="qmark" onclick="abrirGlossario('tcx')">?</span> / GPX<span class="qmark" onclick="abrirGlossario('gpx')">?</span>)</h3>
-    <div class="drop-zone" id="drop-zone">
-      📄 Toque para escolher o arquivo .TCX ou .GPX exportado do Garmin
-    </div>
-    <input type="file" id="file-input" accept=".tcx,.gpx,.xml" style="display:none">
-    <div id="garmin-preview"></div>
-  </div>
-</div>
-
-<!-- ===================== BIBLIOTECA ===================== -->
-<div class="panel" id="biblioteca">
-  <div id="biblioteca-content"></div>
-</div>
-
-<!-- ===================== HISTORICO ===================== -->
-<div class="panel" id="historico">
-  <div class="card">
-    <h3>Resumo</h3>
-    <div class="stat-grid" id="stats"></div>
-  </div>
-  <div class="card">
-    <h3>Análise automática</h3>
-    <p style="font-size:13px;color:var(--text-dim);">Analisa seus últimos registros e observações (dor, dificuldade, sono) e sugere ajustes de carga, corrida ou deload.</p>
-    <button class="big" onclick="analisarSemana()">🧠 Analisar meus últimos registros</button>
-    <div id="analise-resultado"></div>
-  </div>
-  <div class="card">
-    <h3>Últimos registros</h3>
-    <div id="lista"></div>
-  </div>
-  <div class="card">
-    <h3>Backup</h3>
-    <p style="font-size:13px;color:var(--text-dim);">Baixa um arquivo .json com todos os seus dados (treinos, refeições, peso, atividades do Garmin) — guarde em local seguro de vez em quando.</p>
-    <button class="secondary" onclick="exportarBackup()">⬇️ Baixar backup completo</button>
-    <div id="backup-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
-  </div>
-</div>
-
-<!-- ===================== ESTATÍSTICAS ===================== -->
-<div class="panel" id="estatisticas">
-  <div class="card">
-    <h3>Volume semanal</h3>
-    <p style="font-size:13px;color:var(--text-dim);">Sessões por semana, a partir das atividades importadas do Garmin (últimas 12 semanas).</p>
-    <div id="stats-volume-semanal"><div class="empty">Carregando...</div></div>
-  </div>
-  <div class="card">
-    <h3>Progressão de carga</h3>
-    <label>Exercício</label>
-    <select id="stats-exercicio-select" onchange="mudarExercicioEstatisticas()"></select>
-    <div id="stats-progressao-carga" style="margin-top:10px;"><div class="empty">Carregando...</div></div>
-  </div>
-  <div class="card">
-    <h3>Ritmo de corrida</h3>
-    <p style="font-size:13px;color:var(--text-dim);">Combina corridas registradas manualmente e importadas do Garmin.</p>
-    <div id="stats-ritmo-corrida"><div class="empty">Carregando...</div></div>
-  </div>
-</div>
-
-<!-- ===================== PLANO ===================== -->
-<div class="panel" id="plano">
-  <div class="card">
-    <h3>Estrutura semanal fixa</h3>
-    <table class="week-table">
-      <tr><th>Dia</th><th>Sessão</th><th>Foco</th></tr>
-      <tr><td>Segunda</td><td>Musculação A</td><td>Perna (quadríceps) + empurrar</td></tr>
-      <tr><td>Terça</td><td>Corrida Z1 + mobilidade curta</td><td>Base aeróbia</td></tr>
-      <tr><td>Quarta</td><td>Musculação B</td><td>Posterior de cadeia + puxar</td></tr>
-      <tr><td>Quinta</td><td>Mobilidade dedicada MMII<span class="qmark" onclick="abrirGlossario('mmii')">?</span></td><td>Alongamento + descanso ativo</td></tr>
-      <tr><td>Sexta</td><td>Musculação C</td><td>Full body complementar</td></tr>
-      <tr><td>Sábado</td><td>Corrida (variação)</td><td>Tempo / fartlek</td></tr>
-      <tr><td>Domingo</td><td>Corrida longa + mobilidade leve</td><td>Longão Z1–Z2</td></tr>
-    </table>
-  </div>
-  <div class="card">
-    <h3>Metas nutricionais</h3>
-    <div class="stat-grid">
-      <div class="stat"><div class="n">~3050</div><div class="l">kcal/dia</div></div>
-      <div class="stat"><div class="n">170g</div><div class="l">Proteína</div></div>
-      <div class="stat"><div class="n">490g</div><div class="l">Carboidrato</div></div>
-      <div class="stat"><div class="n">85g</div><div class="l">Gordura</div></div>
-    </div>
-  </div>
-  <div class="card">
-    <h3>Regra de ouro</h3>
-    <p style="font-size:13px; color:var(--text-dim); line-height:1.5;">
-      Não alongar estático >60s antes de força/potência. Se juntar força e corrida no mesmo dia, força primeiro.
-      Progrida carga quando bater o topo da faixa de reps com técnica limpa. Deload<span class="qmark" onclick="abrirGlossario('deload')">?</span> a cada 4 semanas se sentir fadiga acumulada.
-    </p>
-  </div>
-</div>
-
-<div class="rest-timer" id="rest-timer">
-  <span><span id="rest-label">Descanso</span>: <span class="n" id="rest-n">90</span>s</span>
-  <button onclick="pularDescanso()">Pular</button>
-</div>
-
-<div class="glossary-overlay" id="glossary-overlay" onclick="if(event.target===this) fecharGlossario()">
-  <div class="glossary-box">
-    <h3 id="glossary-title">Termo</h3>
-    <p id="glossary-text">Definição.</p>
-    <button onclick="fecharGlossario()">Entendi</button>
-  </div>
-</div>
-
-<div class="glossary-overlay" id="senha-overlay" onclick="if(event.target===this) fecharAlterarSenha()">
-  <div class="glossary-box">
-    <h3>Alterar senha</h3>
-    <label>Nova senha</label>
-    <input type="password" id="senha-nova-1" autocomplete="new-password">
-    <label>Confirmar nova senha</label>
-    <input type="password" id="senha-nova-2" autocomplete="new-password">
-    <button onclick="salvarSenhaConta()">Salvar</button>
-    <div class="auth-status" id="senha-status"></div>
-  </div>
-</div>
-
-</div>
-
-<script type="module" src="/src/main.js"></script>
-
+<script type="module" src="/src/landing.js"></script>
 </body>
 </html>
