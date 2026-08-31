@@ -34,7 +34,7 @@ async function enviarRecuperacaoSenha() {
   const email = document.getElementById('auth-forgot-email').value.trim();
   if (!email) { setStatus('auth-forgot-status', 'Digite seu email.', 'err'); return; }
   setStatus('auth-forgot-status', 'Enviando...', '');
-  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/app' });
   if (error) {
     setStatus('auth-forgot-status', 'Não consegui enviar o link. Tente de novo em alguns minutos.', 'err');
     return;
