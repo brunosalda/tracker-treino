@@ -20,7 +20,7 @@ async function exportarBackup() {
     }
 
     const payload = {
-      app: 'TrainingHub',
+      app: 'FitnessHub',
       geradoEm: new Date().toISOString(),
       tabelas: dados
     };
@@ -29,7 +29,7 @@ async function exportarBackup() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `backup-traininghub-${hojeStr()}.json`;
+    a.download = `backup-fitnesshub-${hojeStr()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
