@@ -24,12 +24,40 @@
 
 <section class="hero">
   <div class="hero-scrim"></div>
-  <div class="hero-content">
-    <h1>FitnessHub</h1>
-    <p class="lede">Musculação, corrida, mobilidade e alimentação num só lugar — registre um treino inteiro em segundos, no meio da série, e revise seu progresso depois com clareza.</p>
-    <div class="hero-actions">
-      <a class="btn btn-primary" href="/app">Entrar</a>
-      <a class="btn btn-ghost" href="#acesso">Pedir acesso</a>
+  <div class="hero-grid">
+    <div class="hero-content">
+      <h1>FitnessHub</h1>
+      <p class="lede">Musculação, corrida, mobilidade e alimentação num só lugar — registre um treino inteiro em <span class="hl">segundos</span>, no meio da série, e revise seu progresso depois com clareza.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/app">Entrar</a>
+        <a class="btn btn-ghost" href="#acesso">Pedir acesso</a>
+      </div>
+      <p class="hero-trust">Sincroniza com Garmin</p>
+    </div>
+
+    <div class="phone-mock" aria-hidden="true">
+      <div class="phone-statusbar">
+        <span>9:41</span>
+        <span class="phone-statusbar-icons"><i></i><i></i><i class="battery"></i></span>
+      </div>
+      <div class="phone-screen">
+        <div class="phone-date">Domingo, 31 de agosto</div>
+        <div class="phone-tabs">
+          <span class="phone-tab active">Hoje</span>
+          <span class="phone-tab">Histórico</span>
+          <span class="phone-tab">Estatísticas</span>
+        </div>
+        <div class="fv-label">Musculação B · RDL</div>
+        <div class="set-log">
+          <span class="chip">100kg × 8</span>
+          <span class="chip">100kg × 8</span>
+          <span class="chip">102.5kg × 7</span>
+        </div>
+        <div class="stat-grid phone-stats">
+          <div class="stat"><div class="n">170g</div><div class="l">Proteína</div></div>
+          <div class="stat"><div class="n">3050</div><div class="l">kcal</div></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -99,14 +127,28 @@
 </section>
 
 <section class="access" id="acesso">
-  <div class="access-inner">
-    <h2>Acesso por convite</h2>
-    <p>O FitnessHub ainda não está aberto ao público — cada conta é liberada manualmente. Deixe seu email que a gente avisa quando abrir uma vaga.</p>
-    <form id="access-form">
-      <input type="email" id="access-email" placeholder="voce@email.com" required autocomplete="email">
-      <button type="submit" class="btn btn-primary">Pedir acesso</button>
-    </form>
-    <div class="access-status" id="access-status" role="status"></div>
+  <div class="access-grid">
+    <div class="phone-mock small" aria-hidden="true">
+      <div class="phone-statusbar">
+        <span>9:41</span>
+        <span class="phone-statusbar-icons"><i></i><i></i><i class="battery"></i></span>
+      </div>
+      <div class="phone-screen phone-screen-login">
+        <div class="phone-login-mark">FitnessHub</div>
+        <div class="phone-login-field"></div>
+        <div class="phone-login-field short"></div>
+        <div class="phone-login-btn">Entrar</div>
+      </div>
+    </div>
+    <div class="access-inner">
+      <h2>Acesso por convite</h2>
+      <p>O FitnessHub ainda não está aberto ao público — cada conta é liberada manualmente. Deixe seu email que a gente avisa quando abrir uma vaga.</p>
+      <form id="access-form">
+        <input type="email" id="access-email" placeholder="voce@email.com" required autocomplete="email">
+        <button type="submit" class="btn btn-primary">Pedir acesso</button>
+      </form>
+      <div class="access-status" id="access-status" role="status"></div>
+    </div>
   </div>
 </section>
 
