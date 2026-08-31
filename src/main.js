@@ -5,6 +5,7 @@ import { renderBiblioteca } from './features/library-view.js';
 import { renderAlimentacao, populateFoodSelect, renderPesoChart } from './features/nutrition.js';
 import { carregarEstatisticas } from './features/stats.js';
 import { initAuthGate } from './features/auth.js';
+import { renderPerfil, initFotoHeader } from './features/profile.js';
 import './features/glossary.js';
 import './features/garmin.js';
 import './features/backup.js';
@@ -29,7 +30,7 @@ function lerAbaAtiva() {
 /* ============ TABS ============
    A tab bar inferior tem 5 itens; os painéis "garmin" e "plano" não têm
    botão próprio — são subpáginas do "Mais" (o item Mais fica acentuado). */
-const BAR_FOR_PANEL = { garmin: 'mais', plano: 'mais' };
+const BAR_FOR_PANEL = { garmin: 'mais', plano: 'mais', perfil: 'mais' };
 
 function ativarTab(tabName) {
   const panel = document.getElementById(tabName);
@@ -43,6 +44,7 @@ function ativarTab(tabName) {
   if (tabName === 'historico') carregarHistorico();
   if (tabName === 'biblioteca') renderBiblioteca();
   if (tabName === 'estatisticas') carregarEstatisticas();
+  if (tabName === 'perfil') renderPerfil();
 }
 window.ativarTabGlobal = (name) => {
   ativarTab(name);
@@ -100,6 +102,7 @@ function initApp() {
   const avatarEl = document.getElementById('avatar');
   const email = document.getElementById('account-email')?.textContent || '';
   if (avatarEl && email) avatarEl.textContent = email.charAt(0).toUpperCase();
+  initFotoHeader();
 }
 
 initAuthGate(initApp);

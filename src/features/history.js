@@ -153,14 +153,31 @@ async function buscarGarminPorData() {
   return mapa;
 }
 
-function resumirGarmin(a) {
-  const partes = [];
-  if (a.avg_hr) partes.push(`❤️ FC méd ${a.avg_hr}${a.max_hr ? ` (máx ${a.max_hr})` : ''}`);
-  if (a.calories) partes.push(`🔥 ${a.calories} kcal`);
-  if (a.duration_text) partes.push(`⏱ ${a.duration_text}`);
-  if (a.aerobic_te) partes.push(`TE ${a.aerobic_te}`);
-  if (!partes.length) return '';
-  return `<div class="set-log" style="margin-top:6px;">${partes.map(p => `<span class="chip">${p}</span>`).join('')}</div>`;
+/* ---- Cards de atividade (bloco gradiente estilo Garmin) ---- */
+const ACT_ICONS = {
+  musculacao: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8v8M17 8v8M4 10v4M20 10v4M7 12h10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  corrida: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="15.5" cy="4.5" r="2" fill="currentColor"/><path d="M14 8.5l-3.5 3 3 2.5-2 5M14 8.5l3 2 2.5-1M14 8.5l-1-.5-3.5 1L8 12M11.5 16.5l-3 3.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  mobilidade: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.5" r="2" fill="currentColor"/><path d="M12 7.5v6M12 9l-5-2.5M12 9l5-2.5M12 13.5l-3.5 6M12 13.5l3.5 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+
+function formatarDataCurta(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  if (isNaN(d)) return dateStr;
+  const s = d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'long' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function calcularRitmo(tempoMin, km) {
+  const t = parseFloat(tempoMin), d = parseFloat(km);
+  if (!t || !d) return null;
+  const paceMin = t / d;
+  const m = Math.floor(paceMin);
+  const s = Math.round((paceMin - m) * 60);
+  return `${m}:${String(s).padStart(2, '0')} /km`;
+}
+
+function colHtml(valor, rotulo) {
+  return `<div class="act-col"><div class="v">${valor}</div><div class="k">${rotulo}</div></div>`;
 }
 
 export async function carregarHistorico() {
@@ -203,37 +220,85 @@ export async function carregarHistorico() {
       <div class="stat"><div class="n">${countMob}</div><div class="l">Mobilidade</div></div>
     `;
 
+    let ultimaData = null;
     lista.innerHTML = entries.slice(0, 30).map(e => {
-      const typeClass = { musculacao: 'type-musc', corrida: 'type-corrida', mobilidade: 'type-mob', descanso: 'type-desc', analise: 'type-mob' }[e.type] || '';
-      const typeLabel = { musculacao: 'Musculação', corrida: 'Corrida', mobilidade: 'Mobilidade', descanso: 'Descanso', analise: '🧠 Análise' }[e.type] || e.type;
-      let detail = '';
+      const garmin = garminPorData[e.date + ':' + e.type];
+      const dataLabel = e.date !== ultimaData
+        ? `<div class="act-date-label">${formatarDataCurta(e.date)}</div>` : '';
+      ultimaData = e.date;
+
+      /* descanso e análise não viram bloco gradiente — são notas, não atividades */
+      if (e.type === 'descanso' || e.type === 'analise') {
+        const label = e.type === 'analise' ? 'Análise' : 'Descanso';
+        const obs = e.obs ? `<div style="margin-top:4px;"><em>${escapeHtml(e.obs)}</em></div>` : '';
+        return `${dataLabel}<div class="entry">
+          <span class="del" onclick="apagar('${e._key}')">✕</span>
+          <span class="date">${label}</span>${e.sono ? ` · Sono: ${e.sono}h` : ''}
+          ${obs}
+        </div>`;
+      }
+
+      let titulo = '', big = '', unidade = '', cols = [], corpo = [];
+
       if (e.type === 'musculacao') {
+        titulo = `Musculação ${e.treino || ''}`.trim();
+        const totalSets = Object.values(e.sets || {}).reduce((s, arr) => s + arr.length, 0);
+        const exCount = Object.keys(e.sets || {}).length;
+        if (garmin && garmin.duration_text) {
+          big = garmin.duration_text; unidade = 'Duração';
+          cols.push(colHtml(totalSets, 'Séries'));
+          if (garmin.calories) cols.push(colHtml(garmin.calories, 'kcal'));
+          if (garmin.avg_hr) cols.push(colHtml(garmin.avg_hr, 'FC méd'));
+        } else {
+          big = String(totalSets); unidade = 'Séries';
+          cols.push(colHtml(exCount, 'Exercícios'));
+        }
         const setsSummary = Object.entries(e.sets || {}).map(([exId, sets]) => {
           const label = sets.map(s => s.time !== undefined ? `${s.time}s` : `${s.weight}x${s.reps}`).join(', ');
           return `${exId}: ${label}`;
         }).join(' · ');
-        detail = `Treino ${e.treino || '-'}<br>${escapeHtml(setsSummary)}`;
+        if (setsSummary) corpo.push(escapeHtml(setsSummary));
+
       } else if (e.type === 'corrida') {
-        detail = `${e.distancia ? e.distancia + ' km' : ''}${e.tempo ? ' · ' + e.tempo + ' min' : ''}${e.fc ? ' · FC ' + e.fc : ''}${e.zona ? ' · ' + e.zona : ''}`;
+        titulo = `Corrida${e.zona ? ' · ' + escapeHtml(e.zona) : ''}`;
+        big = e.distancia ? String(e.distancia) : '—'; unidade = 'km';
+        if (e.tempo) cols.push(colHtml(`${e.tempo} min`, 'Tempo'));
+        else if (garmin && garmin.duration_text) cols.push(colHtml(garmin.duration_text, 'Tempo'));
+        const ritmo = calcularRitmo(e.tempo, e.distancia);
+        if (ritmo) cols.push(colHtml(ritmo, 'Ritmo'));
+        const fc = e.fc || (garmin && garmin.avg_hr);
+        if (fc) cols.push(colHtml(fc, 'FC méd'));
+        if (garmin && garmin.calories && cols.length < 3) cols.push(colHtml(garmin.calories, 'kcal'));
+
       } else if (e.type === 'mobilidade') {
-        let setsSummary = '';
+        titulo = 'Mobilidade';
+        big = e.duracao ? String(e.duracao) : '—'; unidade = 'min';
+        if (e.areas) corpo.push(escapeHtml(e.areas));
         if (e.sets && Object.keys(e.sets).length) {
-          setsSummary = '<br>' + Object.entries(e.sets).map(([exId, sets]) => {
+          corpo.push(Object.entries(e.sets).map(([exId, sets]) => {
             const label = sets.map(s => s.time !== undefined ? `${s.time}s` : `${s.weight}x${s.reps}`).join(', ');
             return `${exId}: ${escapeHtml(label)}`;
-          }).join(' · ');
+          }).join(' · '));
         }
-        detail = `${e.duracao ? e.duracao + ' min' : ''}${e.areas ? ' · ' + escapeHtml(e.areas) : ''}${setsSummary}`;
       }
-      const sono = e.sono ? ` · Sono: ${e.sono}h` : '';
-      const obs = e.obs ? `<br><em>${escapeHtml(e.obs)}</em>` : '';
-      const garmin = garminPorData[e.date + ':' + e.type];
-      const garminHtml = garmin ? resumirGarmin(garmin) : '';
-      return `<div class="entry">
-        <span class="del" onclick="apagar('${e._key}')">✕</span>
-        <span class="date">${e.date}</span><span class="type ${typeClass}">${typeLabel}</span>
-        <div style="margin-top:6px;">${detail}${sono}${obs}</div>
-        ${garminHtml}
+
+      if (garmin && garmin.aerobic_te) corpo.push(`Training Effect ${garmin.aerobic_te}`);
+      if (e.sono) corpo.push(`Sono: ${e.sono}h`);
+      if (e.obs) corpo.push(`<em>${escapeHtml(e.obs)}</em>`);
+
+      return `${dataLabel}<div class="act-card">
+        <div class="act-block">
+          <div class="act-head">
+            ${ACT_ICONS[e.type] || ''}
+            <span>${titulo}</span>
+            <span class="act-del" onclick="apagar('${e._key}')" role="button" aria-label="Apagar registro">✕</span>
+          </div>
+          <div class="act-metrics">
+            <div class="act-big"><div class="n">${big}</div><div class="u">${unidade}</div></div>
+            ${cols.join('')}
+          </div>
+        </div>
+        ${corpo.length ? `<div class="act-body">${corpo.join('<br>')}</div>` : ''}
       </div>`;
     }).join('');
 

@@ -77,7 +77,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 <div id="app-root" style="display:none;">
 
 <header class="app-header">
-  <div class="avatar" id="avatar" onclick="ativarTabGlobal('mais')" role="button" aria-label="Abrir menu Mais">·</div>
+  <div class="avatar" id="avatar" onclick="ativarTabGlobal('perfil')" role="button" aria-label="Abrir perfil">·</div>
   <div class="app-header-text">
     <div class="greet" id="header-greet">Olá</div>
     <div class="hdate" id="header-date"></div>
@@ -244,13 +244,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   <div class="card">
     <h3>Análise automática</h3>
     <p style="font-size:13px;color:var(--text-dim);">Analisa seus últimos registros e observações (dor, dificuldade, sono) e sugere ajustes de carga, corrida ou deload.</p>
-    <button class="big" onclick="analisarSemana()">🧠 Analisar meus últimos registros</button>
+    <button class="big" onclick="analisarSemana()">Analisar meus últimos registros</button>
     <div id="analise-resultado"></div>
   </div>
-  <div class="card">
-    <h3>Últimos registros</h3>
-    <div id="lista"></div>
-  </div>
+  <div class="cat-header">Últimos registros</div>
+  <div id="lista"></div>
 </div>
 
 <!-- ===================== ESTATÍSTICAS ===================== -->
@@ -310,6 +308,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   </div>
 </div>
 
+<!-- ===================== PERFIL ===================== -->
+<div class="panel" id="perfil">
+  <div id="perfil-content"></div>
+</div>
+
 <!-- ===================== MAIS ===================== -->
 <div class="panel" id="mais">
   <div class="list-label">Treino</div>
@@ -328,9 +331,10 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
   <div class="list-label">Conta</div>
   <div class="list-group">
-    <div class="list-item static">
+    <div class="list-item" onclick="ativarTabGlobal('perfil')">
       <svg class="li-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span id="account-email" class="li-dim"></span>
+      <span>Perfil <span id="account-email" class="li-dim" style="font-size:12px;"></span></span>
+      <svg class="li-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
     <div class="list-item" onclick="abrirAlterarSenha()">
       <svg class="li-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
