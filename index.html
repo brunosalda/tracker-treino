@@ -25,7 +25,6 @@
 <section class="hero">
   <div class="hero-scrim"></div>
   <div class="hero-content">
-    <p class="eyebrow">Treino registrado de verdade</p>
     <h1>FitnessHub</h1>
     <p class="lede">Musculação, corrida, mobilidade e alimentação num só lugar — registre um treino inteiro em segundos, no meio da série, e revise seu progresso depois com clareza.</p>
     <div class="hero-actions">
@@ -36,28 +35,67 @@
 </section>
 
 <section class="features">
-  <div class="features-inner">
-    <div class="feature">
-      <div class="feature-n">01</div>
+
+  <div class="feature-row">
+    <div class="feature-text">
       <h3>Sessão guiada, sem fricção</h3>
       <p>Um passo de cada vez, exercício por exercício — cada série já é salva sozinha assim que você registra. Nada de procurar onde parou no meio do treino.</p>
     </div>
-    <div class="feature">
-      <div class="feature-n">02</div>
+    <div class="feature-visual">
+      <div class="fv-label">Leg press</div>
+      <div class="set-log">
+        <span class="chip">85kg × 10</span>
+        <span class="chip">85kg × 10</span>
+        <span class="chip">85kg × 10</span>
+        <span class="chip">85kg × 10</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-row reverse">
+    <div class="feature-text">
       <h3>Corrida e musculação juntas</h3>
       <p>Sincronize com o Garmin e veja frequência cardíaca, calorias e training effect direto ao lado do registro manual daquele mesmo dia — sem trocar de app pra cruzar os dados.</p>
     </div>
-    <div class="feature">
-      <div class="feature-n">03</div>
+    <div class="feature-visual">
+      <div class="fv-label">28/08 · Musculação</div>
+      <div class="set-log">
+        <span class="chip">❤️ FC méd 119 (máx 163)</span>
+        <span class="chip">🔥 399 kcal</span>
+        <span class="chip">⏱ 01:14:14</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-row">
+    <div class="feature-text">
       <h3>Alimentação sem planilha</h3>
       <p>Calculadora de porções por proteína e um atalho de importação rápida — registrar uma refeição leva um texto colado, não uma planilha de macros.</p>
     </div>
-    <div class="feature">
-      <div class="feature-n">04</div>
+    <div class="feature-visual">
+      <div class="stat-grid">
+        <div class="stat"><div class="n">82g</div><div class="l">Proteína</div></div>
+        <div class="stat"><div class="n">245g</div><div class="l">Carboidrato</div></div>
+        <div class="stat"><div class="n">3050</div><div class="l">kcal</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-row reverse">
+    <div class="feature-text">
       <h3>Progresso real, não só números</h3>
       <p>Volume semanal, progressão de carga por exercício, ritmo de corrida — gráficos que mostram tendência ao longo de semanas, não só o número solto do dia.</p>
     </div>
+    <div class="feature-visual">
+      <svg class="fv-chart" viewBox="0 0 260 90" aria-hidden="true">
+        <polyline points="8,72 48,58 88,62 128,40 168,44 208,20 252,14" fill="none" stroke="#f2c230" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="252" cy="14" r="4" fill="#f2c230"/>
+        <text x="8" y="86" fill="#6b7178" font-size="9" font-family="-apple-system,sans-serif">03/07</text>
+        <text x="222" y="86" fill="#6b7178" font-size="9" font-family="-apple-system,sans-serif">28/08</text>
+      </svg>
+    </div>
   </div>
+
 </section>
 
 <section class="access" id="acesso">
@@ -68,7 +106,7 @@
       <input type="email" id="access-email" placeholder="voce@email.com" required autocomplete="email">
       <button type="submit" class="btn btn-primary">Pedir acesso</button>
     </form>
-    <div class="access-status" id="access-status"></div>
+    <div class="access-status" id="access-status" role="status"></div>
   </div>
 </section>
 
