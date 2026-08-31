@@ -76,31 +76,23 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 <div id="app-root" style="display:none;">
 
-<h1>FitnessHub</h1>
-<div class="sub">Musculação · Corrida · Mobilidade — registro e progressão</div>
-<div class="account-bar">
-  <span id="account-email"></span>
-  <span class="links">
-    <span class="link" onclick="abrirAlterarSenha()">Alterar senha</span>
-    <span class="link" onclick="sair()">Sair</span>
-  </span>
-</div>
-
-<div class="tabs">
-  <div class="tab active" data-tab="hoje">Hoje</div>
-  <div class="tab" data-tab="garmin">Importar Garmin</div>
-  <div class="tab" data-tab="biblioteca">Biblioteca</div>
-  <div class="tab" data-tab="historico">Histórico</div>
-  <div class="tab" data-tab="estatisticas">Estatísticas</div>
-  <div class="tab" data-tab="plano">Plano</div>
-</div>
+<header class="app-header">
+  <div class="avatar" id="avatar" onclick="ativarTabGlobal('mais')" role="button" aria-label="Abrir menu Mais">·</div>
+  <div class="app-header-text">
+    <div class="greet" id="header-greet">Olá</div>
+    <div class="hdate" id="header-date"></div>
+  </div>
+  <svg class="app-header-logo" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+    <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="3"/>
+    <circle cx="16" cy="16" r="4" fill="currentColor"/>
+  </svg>
+</header>
 
 <!-- ===================== HOJE ===================== -->
 <div class="panel active" id="hoje">
-  <div class="today-date" id="today-date"></div>
-  <div class="tabs" style="position:static;padding:0;margin-bottom:12px;">
-    <div class="subtab active" data-subtab="hoje-treino">🏋️ Treino</div>
-    <div class="subtab" data-subtab="hoje-alimentacao">🍽️ Alimentação</div>
+  <div class="segmented">
+    <div class="subtab active" data-subtab="hoje-treino">Treino</div>
+    <div class="subtab" data-subtab="hoje-alimentacao">Alimentação</div>
   </div>
 
   <!-- ---- SUB-ABA: TREINO ---- -->
@@ -208,6 +200,10 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 <!-- ===================== GARMIN ===================== -->
 <div class="panel" id="garmin">
+  <div class="back-row" onclick="ativarTabGlobal('mais')">
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Mais
+  </div>
   <div class="card">
     <h3>Como exportar do Garmin Connect</h3>
     <details open>
@@ -255,12 +251,6 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <h3>Últimos registros</h3>
     <div id="lista"></div>
   </div>
-  <div class="card">
-    <h3>Backup</h3>
-    <p style="font-size:13px;color:var(--text-dim);">Baixa um arquivo .json com todos os seus dados (treinos, refeições, peso, atividades do Garmin) — guarde em local seguro de vez em quando.</p>
-    <button class="secondary" onclick="exportarBackup()">⬇️ Baixar backup completo</button>
-    <div id="backup-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
-  </div>
 </div>
 
 <!-- ===================== ESTATÍSTICAS ===================== -->
@@ -285,6 +275,10 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 <!-- ===================== PLANO ===================== -->
 <div class="panel" id="plano">
+  <div class="back-row" onclick="ativarTabGlobal('mais')">
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Mais
+  </div>
   <div class="card">
     <h3>Estrutura semanal fixa</h3>
     <table class="week-table">
@@ -315,6 +309,75 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     </p>
   </div>
 </div>
+
+<!-- ===================== MAIS ===================== -->
+<div class="panel" id="mais">
+  <div class="list-label">Treino</div>
+  <div class="list-group">
+    <div class="list-item" onclick="ativarTabGlobal('plano')">
+      <svg class="li-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9.5h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Plano semanal</span>
+      <svg class="li-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="list-item" onclick="ativarTabGlobal('garmin')">
+      <svg class="li-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 3.5h5M9.5 20.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 9.5V12l2 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Importar do Garmin</span>
+      <svg class="li-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+
+  <div class="list-label">Conta</div>
+  <div class="list-group">
+    <div class="list-item static">
+      <svg class="li-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span id="account-email" class="li-dim"></span>
+    </div>
+    <div class="list-item" onclick="abrirAlterarSenha()">
+      <svg class="li-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Alterar senha</span>
+      <svg class="li-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+
+  <div class="list-label">Dados</div>
+  <div class="list-group">
+    <div class="list-item" onclick="exportarBackup()">
+      <svg class="li-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 12l-4-4m4 4l4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Baixar backup completo</span>
+    </div>
+  </div>
+  <div id="backup-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
+
+  <div class="list-group" style="margin-top:22px;">
+    <div class="list-item danger" onclick="sair()">
+      <svg class="li-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H6a2 2 0 01-2-2V5a2 2 0 012-2h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Sair da conta</span>
+    </div>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Navegação principal">
+  <button class="tabbar-item active" data-tab="hoje">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Hoje</span>
+  </button>
+  <button class="tabbar-item" data-tab="biblioteca">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5v14z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Biblioteca</span>
+  </button>
+  <button class="tabbar-item" data-tab="historico">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Histórico</span>
+  </button>
+  <button class="tabbar-item" data-tab="estatisticas">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V13M12 20V5M19 20v-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <span>Estatísticas</span>
+  </button>
+  <button class="tabbar-item" data-tab="mais">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg>
+    <span>Mais</span>
+  </button>
+</nav>
 
 <div class="rest-timer" id="rest-timer">
   <span><span id="rest-label">Descanso</span>: <span class="n" id="rest-n">90</span>s</span>

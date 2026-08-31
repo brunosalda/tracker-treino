@@ -26,18 +26,28 @@ function lerAbaAtiva() {
   try { return JSON.parse(localStorage.getItem(TAB_STATE_KEY)) || null; } catch (e) { return null; }
 }
 
-/* ============ TABS ============ */
+/* ============ TABS ============
+   A tab bar inferior tem 5 itens; os painéis "garmin" e "plano" não têm
+   botão próprio — são subpáginas do "Mais" (o item Mais fica acentuado). */
+const BAR_FOR_PANEL = { garmin: 'mais', plano: 'mais' };
+
 function ativarTab(tabName) {
-  const el = document.querySelector(`.tab[data-tab="${tabName}"]`);
-  if (!el) return;
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  const panel = document.getElementById(tabName);
+  if (!panel || !panel.classList.contains('panel')) return;
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById(tabName).classList.add('active');
+  panel.classList.add('active');
+  const barName = BAR_FOR_PANEL[tabName] || tabName;
+  document.querySelectorAll('.tabbar-item').forEach(x =>
+    x.classList.toggle('active', x.dataset.tab === barName));
+  window.scrollTo(0, 0);
   if (tabName === 'historico') carregarHistorico();
   if (tabName === 'biblioteca') renderBiblioteca();
   if (tabName === 'estatisticas') carregarEstatisticas();
 }
+window.ativarTabGlobal = (name) => {
+  ativarTab(name);
+  salvarAbaAtiva(name, document.querySelector('.subtab.active')?.dataset.subtab);
+};
 function ativarSubtab(subtabName) {
   const el = document.querySelector(`.subtab[data-subtab="${subtabName}"]`);
   if (!el) return;
@@ -55,7 +65,7 @@ function ativarSubtab(subtabName) {
 
 /* ============ INIT (só depois de autenticado) ============ */
 function initApp() {
-  document.querySelectorAll('.tab').forEach(t => {
+  document.querySelectorAll('.tabbar-item').forEach(t => {
     t.addEventListener('click', () => {
       ativarTab(t.dataset.tab);
       salvarAbaAtiva(t.dataset.tab, document.querySelector('.subtab.active')?.dataset.subtab);
@@ -65,7 +75,7 @@ function initApp() {
   document.querySelectorAll('.subtab').forEach(t => {
     t.addEventListener('click', () => {
       ativarSubtab(t.dataset.subtab);
-      salvarAbaAtiva(document.querySelector('.tab.active')?.dataset.tab, t.dataset.subtab);
+      salvarAbaAtiva(document.querySelector('.tabbar-item.active')?.dataset.tab, t.dataset.subtab);
     });
   });
 
@@ -76,11 +86,20 @@ function initApp() {
   document.getElementById('peso-data').valueAsDate = new Date();
   initDaySelect();
 
-  const todayDateEl = document.getElementById('today-date');
-  if (todayDateEl) {
+  /* ---- header pessoal: saudação, data e avatar com inicial ---- */
+  const dateEl = document.getElementById('header-date');
+  if (dateEl) {
     const formatted = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-    todayDateEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    dateEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
   }
+  const greetEl = document.getElementById('header-greet');
+  if (greetEl) {
+    const h = new Date().getHours();
+    greetEl.textContent = h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  }
+  const avatarEl = document.getElementById('avatar');
+  const email = document.getElementById('account-email')?.textContent || '';
+  if (avatarEl && email) avatarEl.textContent = email.charAt(0).toUpperCase();
 }
 
 initAuthGate(initApp);

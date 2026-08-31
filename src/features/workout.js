@@ -377,9 +377,9 @@ function renderSetLog(exId) {
 }
 
 function abrirCue(cueId) {
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
-  document.querySelector('.tab[data-tab="biblioteca"]').classList.add('active');
+  document.querySelectorAll('.tabbar-item').forEach(x =>
+    x.classList.toggle('active', x.dataset.tab === 'biblioteca'));
   document.getElementById('biblioteca').classList.add('active');
   renderBiblioteca(cueId);
 }
