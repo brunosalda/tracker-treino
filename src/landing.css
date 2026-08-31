@@ -82,26 +82,52 @@ a { color: inherit; }
   .phone-mock { margin: 8px auto 0; }
 }
 
-/* ============ PHONE MOCK ============ */
+/* ============ PHONE MOCK ============
+   Real device proportions (iPhone-class: ~9:19.5), not a rounded div pretending
+   to be one — precise corner radii, titanium-edge gradient with a rim highlight,
+   dynamic island, physical side buttons, glass sheen, home indicator. */
 .phone-mock {
-  position: relative; z-index: 1; width: 260px; margin-left: auto;
-  background: linear-gradient(155deg, #2c3036, #0e1013);
-  border-radius: 34px; padding: 10px;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+  position: relative; z-index: 1; width: 250px; aspect-ratio: 9 / 19.5; margin-left: auto;
+  background: linear-gradient(155deg, #5a5f66 0%, #2c2f33 12%, #1a1c1f 45%, #0a0b0c 75%, #38393d 100%);
+  border-radius: 20% / 9.5%;
+  padding: 3.6% 3.2%;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.12),
+    inset 0 1.5px 0 rgba(255,255,255,0.35),
+    inset 0 -1.5px 0 rgba(0,0,0,0.6),
+    0 40px 70px -20px rgba(0,0,0,0.65),
+    0 10px 24px -8px rgba(0,0,0,0.5);
   opacity: 0; animation: heroStamp 0.6s cubic-bezier(.2,.8,.25,1) 0.32s forwards;
 }
-.phone-mock.small { width: 168px; margin: 0 auto; animation: none; opacity: 1; }
+.phone-mock.small { width: 172px; margin: 0 auto; animation: none; opacity: 1; }
+
+.phone-btn { position: absolute; background: linear-gradient(90deg, #0a0b0c, #26282b); border-radius: 2px; z-index: 3; }
+.phone-btn.side-mute { left: -2px; top: 15.5%; width: 3px; height: 3.4%; }
+.phone-btn.side-vol-up { left: -2px; top: 21%; width: 3px; height: 6%; }
+.phone-btn.side-vol-down { left: -2px; top: 28.5%; width: 3px; height: 6%; }
+.phone-btn.side-power { right: -2px; top: 21%; width: 3px; height: 8.5%; background: linear-gradient(-90deg, #0a0b0c, #26282b); }
+
+.phone-island {
+  position: absolute; top: 2.4%; left: 50%; transform: translateX(-50%);
+  width: 32%; height: 3.2%; background: #000; border-radius: 999px; z-index: 4;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.phone-screen {
+  position: relative; z-index: 2; width: 100%; height: 100%;
+  background:
+    linear-gradient(155deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 18%),
+    var(--bg-inset);
+  border-radius: 16.5% / 7.8%;
+  padding: 11% 8% 6%;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5);
+}
 .phone-statusbar {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 14px 4px; font-family: var(--font-display); font-size: 11px; color: var(--text);
+  margin-bottom: 10px; font-family: var(--font-display); font-size: 11px; color: var(--text);
 }
-.phone-statusbar-icons { display: flex; gap: 3px; align-items: center; }
-.phone-statusbar-icons i { display: block; width: 8px; height: 6px; background: var(--text-dim); border-radius: 1px; }
-.phone-statusbar-icons i.battery { width: 14px; height: 7px; border-radius: 2px; border: 1px solid var(--text-dim); background: none; }
-.phone-screen {
-  background: var(--bg); border-radius: 22px; padding: 14px; min-height: 300px;
-  border: 1px solid var(--panel-border);
-}
+.phone-statusbar-icons { color: var(--text); }
 .phone-date {
   font-family: var(--font-display); font-size: 10px; color: var(--text-faint);
   text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
@@ -116,9 +142,14 @@ a { color: inherit; }
 .phone-stats { margin-top: 16px; }
 .phone-stats .stat { padding: 8px 6px; }
 .phone-stats .n { font-size: 16px; }
-.phone-screen-login { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding-top: 28px; }
-.phone-login-mark { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; margin-bottom: 8px; }
-.phone-login-field { width: 100%; height: 22px; background: var(--bg-inset); border: 1px solid var(--panel-border); border-radius: 4px; }
+.phone-home-indicator {
+  position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%);
+  width: 34%; height: 4px; background: var(--text-dim); border-radius: 999px; opacity: 0.6;
+}
+.phone-screen-login { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.phone-screen-login .phone-statusbar { width: 100%; }
+.phone-login-mark { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; margin: 26px 0 8px; }
+.phone-login-field { width: 100%; height: 22px; background: var(--bg); border: 1px solid var(--panel-border); border-radius: 4px; }
 .phone-login-field.short { width: 70%; align-self: flex-start; }
 .phone-login-btn {
   width: 100%; text-align: center; background: var(--accent); color: var(--accent-ink);
