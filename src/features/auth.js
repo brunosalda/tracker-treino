@@ -4,6 +4,11 @@ import { setCurrentAccessToken } from '../lib/storage.js';
 let onAuthenticatedCallback = null;
 let appInitialized = false;
 
+// Link de CONVITE (type=invite no hash): o Supabase autentica direto, mas o
+// usuário ainda não tem senha — antes de liberar o app, forçamos a tela
+// "Defina sua senha de acesso" (mesma do fluxo de recuperação).
+let fluxoConvite = (window.location.hash || '').includes('type=invite');
+
 function mostrarForm(nome) {
   document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
   document.getElementById('auth-' + nome).classList.add('active');
@@ -57,6 +62,13 @@ async function salvarNovaSenha() {
   document.getElementById('auth-newpass-2').value = '';
   setStatus('auth-newpass-status', '', '');
   fecharAlterarSenha();
+  if (fluxoConvite) {
+    // senha definida — libera o app (o onAuthStateChange USER_UPDATED cuida do resto)
+    fluxoConvite = false;
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app-root').style.display = '';
+    if (!appInitialized) { appInitialized = true; onAuthenticatedCallback(); }
+  }
 }
 
 function abrirAlterarSenha() {
@@ -96,6 +108,14 @@ export function initAuthGate(onAuthenticated) {
     const appRoot = document.getElementById('app-root');
 
     if (event === 'PASSWORD_RECOVERY') {
+      appRoot.style.display = 'none';
+      authScreen.classList.remove('hidden');
+      mostrarForm('newpass');
+      return;
+    }
+
+    // convite aceito: sessão existe mas a senha ainda não foi definida
+    if (session && fluxoConvite) {
       appRoot.style.display = 'none';
       authScreen.classList.remove('hidden');
       mostrarForm('newpass');
