@@ -47,10 +47,12 @@ function salvarEscolhaDoDia(value) {
 export function initDaySelect() {
   const sel = document.getElementById('day-select');
   const today = new Date().getDay();
-  const opts = [
-    { v: "A", l: "Musculação A" }, { v: "B", l: "Musculação B" }, { v: "C", l: "Musculação C" },
-    { v: "corrida", l: "Corrida" }, { v: "mobilidade", l: "Mobilidade" }, { v: "descanso", l: "Descanso" }
-  ];
+  // opções derivadas do PROGRAM ativo (pode ser o plano de outro usuário —
+  // qualquer chave com exercícios vira uma sessão de força selecionável)
+  const opts = Object.entries(PROGRAM)
+    .filter(([k]) => k !== 'mobilidade')
+    .map(([k, v]) => ({ v: k, l: (v.label || k).split('—')[0].trim() }));
+  opts.push({ v: "corrida", l: "Corrida" }, { v: "mobilidade", l: "Mobilidade" }, { v: "descanso", l: "Descanso" });
   sel.innerHTML = opts.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
   sel.value = lerEscolhaDoDia() || DAY_TO_TYPE[today];
   sel.addEventListener('change', () => { salvarEscolhaDoDia(sel.value); renderWorkoutArea(sel.value); });
@@ -69,7 +71,7 @@ async function renderWorkoutArea(type) {
   const finalizar = document.getElementById('finalizar-card');
   const today = new Date().getDay();
 
-  if (type === 'A' || type === 'B' || type === 'C') {
+  if (type !== 'corrida' && type !== 'mobilidade' && type !== 'descanso' && PROGRAM[type] && PROGRAM[type].exercicios) {
     const prog = PROGRAM[type];
     area.innerHTML = `
       <div class="card">

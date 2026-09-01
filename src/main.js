@@ -72,6 +72,36 @@ function ativarSubtab(subtabName) {
 }
 
 /* ============ INIT (só depois de autenticado) ============ */
+/* Itens de pré-visualização de planos no painel Mais: um por chave
+   'plan_*' encontrada no storage, mais o "voltar" quando ativa. */
+async function montarPreviewPlanos(previewAtivo) {
+  const box = document.getElementById('mais-plan-preview');
+  if (!box) return;
+  let chaves = [];
+  try {
+    const r = await storage.list('plan_');
+    chaves = (r && r.keys) || [];
+  } catch (e) {}
+  if (!chaves.length && !previewAtivo) { box.innerHTML = ''; return; }
+  let html = '<div class="list-label">Planos</div><div class="list-group">';
+  if (previewAtivo) {
+    html += `<div class="list-item" onclick="sairPreviewPlano()">
+      <svg class="li-icon" viewBox="0 0 24 24"><path d="M10 19l-7-7 7-7M3 12h18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Voltar ao meu plano <span class="li-dim" style="font-size:12px;">(vendo: ${previewAtivo.replace('plan_', '')})</span></span>
+    </div>`;
+  }
+  chaves.filter(k => k !== previewAtivo).forEach(k => {
+    html += `<div class="list-item" onclick="entrarPreviewPlano('${k}')">
+      <svg class="li-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <span>Pré-visualizar plano: ${k.replace('plan_', '')}</span>
+      <svg class="li-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>`;
+  });
+  box.innerHTML = html + '</div>';
+}
+window.entrarPreviewPlano = (k) => { try { localStorage.setItem('planPreview', k); } catch (e) {} location.reload(); };
+window.sairPreviewPlano = () => { try { localStorage.removeItem('planPreview'); } catch (e) {} location.reload(); };
+
 /* Blocos de metas e a tabela semanal são renderizados do plano ativo —
    cada usuário pode ter o próprio (chave 'plan' no storage). */
 function renderPlanoUI() {
@@ -92,9 +122,14 @@ function renderPlanoUI() {
 }
 
 async function initApp() {
-  // plano do usuário ANTES de qualquer render que dependa dele
-  await carregarPlanoDoUsuario(storage);
+  // plano do usuário ANTES de qualquer render que dependa dele.
+  // Modo pré-visualização: um admin pode ativar temporariamente o plano de
+  // outra pessoa (chave 'plan_<nome>' salva na PRÓPRIA conta) pra revisar
+  // como o app fica antes de liberar o acesso — os DADOS continuam os seus.
+  const previewKey = localStorage.getItem('planPreview');
+  await carregarPlanoDoUsuario(storage, previewKey || 'plan');
   renderPlanoUI();
+  await montarPreviewPlanos(previewKey);
 
   document.querySelectorAll('.tabbar-item').forEach(t => {
     t.addEventListener('click', () => {

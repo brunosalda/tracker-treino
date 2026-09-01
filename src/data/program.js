@@ -68,9 +68,9 @@ function substituir(alvo, novo) {
   for (const k of Object.keys(alvo)) delete alvo[k];
   Object.assign(alvo, novo);
 }
-export async function carregarPlanoDoUsuario(storage) {
+export async function carregarPlanoDoUsuario(storage, chave) {
   try {
-    const r = await storage.get('plan');
+    const r = await storage.get(chave || 'plan');
     if (!r || !r.value) return false;
     const p = JSON.parse(r.value);
     if (p.PROGRAM) substituir(PROGRAM, p.PROGRAM);

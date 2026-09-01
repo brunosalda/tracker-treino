@@ -30,9 +30,12 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   <div class="slide slide-2"></div>
   <div class="slide slide-3"></div>
   <div class="plate">
-    <svg class="plate-icon" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">
-      <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="3"/>
-      <circle cx="16" cy="16" r="4" fill="currentColor"/>
+    <svg class="plate-icon" viewBox="0 0 32 32" width="40" height="40" aria-hidden="true">
+      <rect x="2.5" y="12.5" width="3.6" height="7" rx="1.2" fill="currentColor"/>
+      <rect x="6.6" y="10" width="4.2" height="12" rx="1.4" fill="currentColor"/>
+      <rect x="25.9" y="12.5" width="3.6" height="7" rx="1.2" fill="currentColor"/>
+      <rect x="21.2" y="10" width="4.2" height="12" rx="1.4" fill="currentColor"/>
+      <rect x="10.8" y="14.6" width="10.4" height="2.8" rx="1.4" fill="currentColor"/>
     </svg>
     <div class="mark">FitnessHub</div>
     <div class="sub">carregando sessão de hoje</div>
@@ -84,9 +87,8 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       <div class="hdate" id="header-date"></div>
     </div>
     <button class="header-gear" onclick="ativarTabGlobal('mais')" aria-label="Abrir configurações">
-      <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true">
-        <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
-        <path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path fill="currentColor" fill-rule="evenodd" d="M13.9 2c.25 0 .46.18.5.42l.37 2.65c.63.26 1.2.6 1.74 1l2.48-1c.22-.09.48 0 .6.22l2 3.46a.5.5 0 0 1-.11.64L19.38 11c.04.32.06.65.06 1s-.02.68-.06 1l2.1 1.65c.19.15.24.42.12.64l-2 3.46a.5.5 0 0 1-.61.22l-2.48-1c-.54.4-1.11.74-1.74 1l-.37 2.65a.5.5 0 0 1-.5.42h-4a.5.5 0 0 1-.5-.42l-.37-2.65a7.3 7.3 0 0 1-1.74-1l-2.48 1a.5.5 0 0 1-.61-.22l-2-3.46a.5.5 0 0 1 .12-.64L4.62 13c-.04-.32-.06-.65-.06-1s.02-.68.06-1l-2.1-1.65a.5.5 0 0 1-.12-.64l2-3.46c.13-.22.39-.31.6-.22l2.49 1c.54-.4 1.1-.74 1.74-1l.37-2.65A.5.5 0 0 1 10.1 2h3.8zm-2 6.5A3.5 3.5 0 1 0 11.9 15.5 3.5 3.5 0 0 0 11.9 8.5z"/>
       </svg>
     </button>
   </div>
@@ -333,6 +335,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 <!-- ===================== MAIS ===================== -->
 <div class="panel" id="mais">
+  <div id="mais-plan-preview"></div>
   <div class="list-label">Treino</div>
   <div class="list-group">
     <div class="list-item" onclick="ativarTabGlobal('plano')">
