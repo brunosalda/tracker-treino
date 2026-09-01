@@ -1,4 +1,4 @@
-import { storage, SUPA_URL, supaHeaders } from '../lib/storage.js';
+import { storage, SUPA_URL, supaHeaders, isPreviewGuest } from '../lib/storage.js';
 import { escapeHtml } from '../lib/dom-utils.js';
 import { hojeStr } from '../lib/date-utils.js';
 import { METAS, ORIENTACOES } from '../data/program.js';
@@ -152,6 +152,7 @@ function classificarGarminTipo(activityType) {
 
 async function buscarGarminPorData() {
   const mapa = {};
+  if (isPreviewGuest()) return mapa;
   try {
     const res = await fetch(`${SUPA_URL}/rest/v1/garmin_activities?select=activity_type,activity_date,avg_hr,max_hr,calories,duration_text,aerobic_te`, { headers: supaHeaders() });
     if (!res.ok) return mapa;

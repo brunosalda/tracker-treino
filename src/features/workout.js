@@ -2,7 +2,7 @@ import { PROGRAM, DAY_TO_TYPE, RUNNING_PLAN, ORIENTACOES } from '../data/program
 import { LIBRARY } from '../data/library.js';
 import { DIAGRAMS } from '../data/diagrams.js';
 import { acaoImagemVideo } from '../lib/svg-helpers.js';
-import { storage } from '../lib/storage.js';
+import { storage, isPreviewGuest } from '../lib/storage.js';
 import { hojeStr } from '../lib/date-utils.js';
 
 /* ============ ESTADO ============ */
@@ -33,6 +33,7 @@ async function setCorridaSemana(n) {
 const DAY_SELECT_KEY = 'daySelectChoice';
 
 function lerEscolhaDoDia() {
+  if (isPreviewGuest()) return null; // preview: sempre o dia do plano do convidado
   try {
     const raw = localStorage.getItem(DAY_SELECT_KEY);
     if (!raw) return null;
@@ -41,6 +42,7 @@ function lerEscolhaDoDia() {
   } catch (e) { return null; }
 }
 function salvarEscolhaDoDia(value) {
+  if (isPreviewGuest()) return;
   try { localStorage.setItem(DAY_SELECT_KEY, JSON.stringify({ date: hojeStr(), value })); } catch (e) {}
 }
 
@@ -422,6 +424,7 @@ function novoLogEntryBase(tipoSessao) {
 const WIZARD_RESUME_KEY = 'wizardResume';
 
 function salvarWizardResume() {
+  if (isPreviewGuest()) return;
   if (!wizard || !currentLogKey) return;
   try {
     localStorage.setItem(WIZARD_RESUME_KEY, JSON.stringify({
@@ -442,6 +445,7 @@ function limparWizardResume() {
 }
 
 function lerWizardResume() {
+  if (isPreviewGuest()) return null;
   try {
     const raw = localStorage.getItem(WIZARD_RESUME_KEY);
     if (!raw) return null;

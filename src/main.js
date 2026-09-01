@@ -7,7 +7,7 @@ import { carregarEstatisticas } from './features/stats.js';
 import { initAuthGate } from './features/auth.js';
 import { renderPerfil, initFotoHeader } from './features/profile.js';
 import { carregarPlanoDoUsuario, METAS, SEMANA, ORIENTACOES, PLANO_ALIMENTAR } from './data/program.js';
-import { storage } from './lib/storage.js';
+import { storage, setPreviewGuestMode } from './lib/storage.js';
 import './features/glossary.js';
 import './features/garmin.js';
 import './features/backup.js';
@@ -150,6 +150,9 @@ async function initApp() {
   // outra pessoa (chave 'plan_<nome>' salva na PRÓPRIA conta) pra revisar
   // como o app fica antes de liberar o acesso — os DADOS continuam os seus.
   const previewKey = localStorage.getItem('planPreview');
+  // preview = conta zerada simulada: NENHUM dado pessoal do dono é lido ou
+  // gravado enquanto o modo estiver ativo (storage e Garmin bloqueados)
+  setPreviewGuestMode(!!previewKey);
   await carregarPlanoDoUsuario(storage, previewKey || 'plan');
   renderPlanoUI();
   await montarPreviewPlanos(previewKey);
@@ -187,9 +190,17 @@ async function initApp() {
     greetEl.textContent = h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
   }
   const avatarEl = document.getElementById('avatar');
-  const email = document.getElementById('account-email')?.textContent || '';
-  if (avatarEl && email) avatarEl.textContent = email.charAt(0).toUpperCase();
-  initFotoHeader();
+  if (previewKey) {
+    // identidade neutra: nada do dono aparece na simulação
+    const nomePlano = previewKey.replace('plan_', '');
+    if (greetEl) greetEl.textContent = 'Pré-visualização';
+    if (dateEl) dateEl.textContent = 'Plano: ' + nomePlano + ' · conta zerada simulada';
+    if (avatarEl) avatarEl.textContent = (nomePlano.charAt(0) || '·').toUpperCase();
+  } else {
+    const email = document.getElementById('account-email')?.textContent || '';
+    if (avatarEl && email) avatarEl.textContent = email.charAt(0).toUpperCase();
+    initFotoHeader();
+  }
 }
 
 initAuthGate(initApp);

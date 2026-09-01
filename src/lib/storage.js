@@ -9,6 +9,15 @@ export function setCurrentAccessToken(token) {
   currentAccessToken = token;
 }
 
+/* Modo pré-visualização de plano de convidado: os DADOS pessoais do dono
+   da conta (históricos, refeições, peso, perfil, últimas cargas) ficam
+   invisíveis, simulando a conta zerada que o convidado verá. As chaves de
+   plano ('plan', 'plan_*') continuam acessíveis. */
+let previewGuest = false;
+export function setPreviewGuestMode(on) { previewGuest = !!on; }
+export function isPreviewGuest() { return previewGuest; }
+const DADO_PESSOAL = /^(log:|meal:|lastset:|weight:)|^profile$|^corridaSemana$/;
+
 function supaTableFor(key) {
   if (key.startsWith('log:')) return 'logs';
   if (key.startsWith('meal:')) return 'meals';
@@ -21,6 +30,7 @@ export function supaHeaders(extra) {
 
 export const storage = {
   async get(key) {
+    if (previewGuest && DADO_PESSOAL.test(key)) return null;
     const table = supaTableFor(key);
     const url = `${SUPA_URL}/rest/v1/${table}?key=eq.${encodeURIComponent(key)}&select=value`;
     const res = await fetch(url, { headers: supaHeaders() });
@@ -30,6 +40,8 @@ export const storage = {
     return { key, value: JSON.stringify(rows[0].value), shared: false };
   },
   async set(key, value) {
+    // em pré-visualização nada é gravado — nem na conta do dono, nem em lugar algum
+    if (previewGuest && DADO_PESSOAL.test(key)) return { key, value, shared: false, preview: true };
     const table = supaTableFor(key);
     const parsed = JSON.parse(value);
     const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
@@ -41,6 +53,7 @@ export const storage = {
     return { key, value, shared: false };
   },
   async delete(key) {
+    if (previewGuest && DADO_PESSOAL.test(key)) return { key, deleted: true, shared: false, preview: true };
     const table = supaTableFor(key);
     const res = await fetch(`${SUPA_URL}/rest/v1/${table}?key=eq.${encodeURIComponent(key)}`, {
       method: 'DELETE', headers: supaHeaders()
@@ -49,6 +62,7 @@ export const storage = {
     return { key, deleted: true, shared: false };
   },
   async list(prefix) {
+    if (previewGuest && prefix && DADO_PESSOAL.test(prefix)) return { keys: [], prefix, shared: false };
     const table = supaTableFor(prefix || '');
     const params = new URLSearchParams({ select: 'key' });
     if (prefix) params.set('key', `like.${prefix}*`);

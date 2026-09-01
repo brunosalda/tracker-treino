@@ -1,4 +1,4 @@
-import { storage, SUPA_URL, supaHeaders } from '../lib/storage.js';
+import { storage, SUPA_URL, supaHeaders, isPreviewGuest } from '../lib/storage.js';
 import { lineChartSvg, SVG_ACCENT } from '../lib/svg-helpers.js';
 import { barsChart, ganttChart, fcLineChart, scatterChart, bandLineChart, hbarChart, nutriChart } from '../lib/charts.js';
 import { PROGRAM, METAS as METAS_PLANO } from '../data/program.js';
@@ -20,6 +20,7 @@ function mapasExercicios() {
 
 /* ---- loaders ---- */
 async function buscarGarminActivities() {
+  if (isPreviewGuest()) return []; // atividades Garmin são dados pessoais do dono
   const res = await fetch(`${SUPA_URL}/rest/v1/garmin_activities?select=activity_type,activity_date,distance_km,duration_seconds,calories,avg_hr,max_hr,aerobic_te&order=activity_date`, { headers: supaHeaders() });
   if (!res.ok) throw new Error('Falha ao buscar atividades do Garmin: ' + res.status);
   return res.json();

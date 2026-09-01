@@ -1,4 +1,4 @@
-import { storage, SUPA_URL, supaHeaders } from '../lib/storage.js';
+import { storage, SUPA_URL, supaHeaders, isPreviewGuest } from '../lib/storage.js';
 import { escapeHtml } from '../lib/dom-utils.js';
 import { PROGRAM } from '../data/program.js';
 
@@ -115,6 +115,7 @@ async function buscarPesoAtual() {
 }
 
 async function buscarUltimaAtividadeGarmin() {
+  if (isPreviewGuest()) return null;
   try {
     const res = await fetch(
       `${SUPA_URL}/rest/v1/garmin_activities?select=activity_date,activity_type&order=activity_date.desc&limit=1`,
