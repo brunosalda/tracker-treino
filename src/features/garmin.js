@@ -123,7 +123,24 @@ function parseGPX(text) {
   };
 }
 
-function mostrarPreviewGarmin(parsed) {
+// Procura treinos de força/mobilidade do app no mesmo dia do arquivo —
+// pra oferecer "anexar a FC" a eles em vez de salvar como corrida.
+async function buscarTreinosDoDia(dateStr) {
+  try {
+    const keysResult = await storage.list('log:' + dateStr);
+    if (!keysResult || !keysResult.keys) return [];
+    const out = [];
+    for (const key of keysResult.keys) {
+      const r = await storage.get(key);
+      if (!r || !r.value) continue;
+      const e = JSON.parse(r.value);
+      if (e.type === 'musculacao' || e.type === 'mobilidade') out.push({ key, entry: e });
+    }
+    return out;
+  } catch (e) { return []; }
+}
+
+async function mostrarPreviewGarmin(parsed) {
   ultimoGarminParsed = parsed;
   const el = document.getElementById('garmin-preview');
   if (!parsed.distanceKm && !parsed.timeMin) {
@@ -131,7 +148,25 @@ function mostrarPreviewGarmin(parsed) {
     return;
   }
   const nAmostras = parsed.hrSamples ? parsed.hrSamples.length : 0;
-  el.innerHTML = `
+
+  // atividade sem distância relevante + treino de força registrado no dia?
+  // provavelmente é o TCX da musculação — oferecer anexar a FC ao treino.
+  let anexarHtml = '';
+  if (nAmostras && parsed.startTime) {
+    const dateStr = dataDoTimestamp(parsed.startTime);
+    const treinos = await buscarTreinosDoDia(dateStr);
+    if (treinos.length) {
+      window.__treinosDoDia = treinos;
+      anexarHtml = `
+        <div class="card" style="border-color:var(--accent-dim);">
+          <h4>Esse arquivo parece ser do seu treino de força</h4>
+          <p style="font-size:13px;color:var(--text-dim);">Encontrei ${treinos.length === 1 ? 'um treino registrado' : treinos.length + ' treinos registrados'} no app em ${dateStr.split('-').reverse().join('/')}. Anexar a frequência cardíaca a ele libera o Raio-X completo (FC por exercício) na aba Estatísticas.</p>
+          ${treinos.map((t, i) => `<button class="big" style="margin-top:6px;" onclick="anexarFcAoTreino(${i})">Anexar FC — ${t.entry.type === 'musculacao' ? 'Musculação ' + (t.entry.treino || '') : 'Mobilidade'}</button>`).join('')}
+          <div id="anexar-status" style="font-size:12px;margin-top:8px;color:var(--text-dim);"></div>
+        </div>`;
+    }
+  }
+  el.innerHTML = anexarHtml + `
     <div class="card">
       <h4>Dados encontrados — confira e ajuste se precisar</h4>
       <label>Distância (km)</label>
@@ -175,4 +210,24 @@ async function salvarCorridaGarmin() {
   }
 }
 
+// Anexa a série de FC do arquivo importado a um treino já registrado no app
+// (mesmo dia) — não cria entrada nova; o Raio-X passa a mostrar FC por exercício.
+async function anexarFcAoTreino(idx) {
+  const status = document.getElementById('anexar-status');
+  const alvo = (window.__treinosDoDia || [])[idx];
+  if (!alvo || !ultimoGarminParsed) { if (status) status.textContent = 'Nada pra anexar.'; return; }
+  try {
+    const entry = alvo.entry;
+    entry.hrSamples = ultimoGarminParsed.hrSamples || [];
+    if (!entry.horaInicio && ultimoGarminParsed.startTime) entry.horaInicio = ultimoGarminParsed.startTime;
+    if (!entry.horaFim && ultimoGarminParsed.endTime) entry.horaFim = ultimoGarminParsed.endTime;
+    if (ultimoGarminParsed.avgHr && !entry.fc) entry.fc = String(ultimoGarminParsed.avgHr);
+    await storage.set(alvo.key, JSON.stringify(entry));
+    status.textContent = `✓ FC anexada (${entry.hrSamples.length} pontos). Veja o Raio-X na aba Estatísticas.`;
+  } catch (e) {
+    status.textContent = 'Erro ao anexar: ' + e.message;
+  }
+}
+
 window.salvarCorridaGarmin = salvarCorridaGarmin;
+window.anexarFcAoTreino = anexarFcAoTreino;

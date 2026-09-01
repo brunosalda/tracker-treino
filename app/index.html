@@ -77,15 +77,19 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 <div id="app-root" style="display:none;">
 
 <header class="app-header">
-  <div class="avatar" id="avatar" onclick="ativarTabGlobal('perfil')" role="button" aria-label="Abrir perfil">·</div>
-  <div class="app-header-text">
-    <div class="greet" id="header-greet">Olá</div>
-    <div class="hdate" id="header-date"></div>
+  <div class="app-header-inner">
+    <div class="avatar" id="avatar" onclick="ativarTabGlobal('perfil')" role="button" aria-label="Abrir perfil">·</div>
+    <div class="app-header-text">
+      <div class="greet" id="header-greet">Olá</div>
+      <div class="hdate" id="header-date"></div>
+    </div>
+    <button class="header-gear" onclick="ativarTabGlobal('mais')" aria-label="Abrir configurações">
+      <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true">
+        <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
   </div>
-  <svg class="app-header-logo" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
-    <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="3"/>
-    <circle cx="16" cy="16" r="4" fill="currentColor"/>
-  </svg>
 </header>
 
 <!-- ===================== HOJE ===================== -->
@@ -254,20 +258,51 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 <!-- ===================== ESTATÍSTICAS ===================== -->
 <div class="panel" id="estatisticas">
   <div class="card">
-    <h3>Volume semanal</h3>
-    <p style="font-size:13px;color:var(--text-dim);">Sessões por semana, a partir das atividades importadas do Garmin (últimas 12 semanas).</p>
-    <div id="stats-volume-semanal"><div class="empty">Carregando...</div></div>
+    <h3>Sessões por mês</h3>
+    <p style="font-size:13px;color:var(--text-dim);">Todos os treinos — força, corrida, mobilidade e importados do Garmin (últimos 6 meses).</p>
+    <div id="an-sessoes-mes"><div class="empty">Carregando...</div></div>
+  </div>
+  <div class="card">
+    <h3>Raio-X da sessão</h3>
+    <p style="font-size:13px;color:var(--text-dim);">Linha do tempo real do treino: exercícios, transições e — com o .TCX anexado — a frequência cardíaca em cada momento.</p>
+    <label>Sessão</label>
+    <select id="an-sessao-select" onchange="mudarSessaoRaioX()"></select>
+    <div id="an-raiox" style="margin-top:10px;"><div class="empty">Carregando...</div></div>
+  </div>
+  <div class="card">
+    <h3>Intensidade das sessões</h3>
+    <label>Tipo de treino</label>
+    <select id="an-tipo-select" onchange="mudarTipoIntensidade()">
+      <option value="todos">Todos</option>
+      <option value="musculacao">Força</option>
+      <option value="corrida">Corrida</option>
+      <option value="tenis">Tênis</option>
+      <option value="caminhada">Caminhada</option>
+    </select>
+    <div id="an-intensidade" style="margin-top:10px;"><div class="empty">Carregando...</div></div>
+  </div>
+  <div class="card">
+    <h3>Training Effect</h3>
+    <p style="font-size:13px;color:var(--text-dim);">Qualidade do estímulo aeróbico de cada sessão de força, na régua do Garmin.</p>
+    <div id="an-te"><div class="empty">Carregando...</div></div>
+  </div>
+  <div class="card">
+    <h3>Ritmo das corridas</h3>
+    <div id="an-corridas"><div class="empty">Carregando...</div></div>
+  </div>
+  <div class="card">
+    <h3>Nutrição × metas</h3>
+    <div id="an-nutricao"><div class="empty">Carregando...</div></div>
+  </div>
+  <div class="card">
+    <h3>Cargas e recordes</h3>
+    <div id="an-cargas"><div class="empty">Carregando...</div></div>
   </div>
   <div class="card">
     <h3>Progressão de carga</h3>
     <label>Exercício</label>
     <select id="stats-exercicio-select" onchange="mudarExercicioEstatisticas()"></select>
     <div id="stats-progressao-carga" style="margin-top:10px;"><div class="empty">Carregando...</div></div>
-  </div>
-  <div class="card">
-    <h3>Ritmo de corrida</h3>
-    <p style="font-size:13px;color:var(--text-dim);">Combina corridas registradas manualmente e importadas do Garmin.</p>
-    <div id="stats-ritmo-corrida"><div class="empty">Carregando...</div></div>
   </div>
 </div>
 
@@ -376,10 +411,6 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   <button class="tabbar-item" data-tab="estatisticas">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V13M12 20V5M19 20v-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
     <span>Estatísticas</span>
-  </button>
-  <button class="tabbar-item" data-tab="mais">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg>
-    <span>Mais</span>
   </button>
 </nav>
 

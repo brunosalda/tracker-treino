@@ -13,6 +13,7 @@ body {
   color: var(--text);
   font-family: var(--font-body);
   padding: 12px;
+  padding-top: calc(86px + env(safe-area-inset-top, 0px)); /* espaço do header fixo */
   padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   -webkit-font-smoothing: antialiased;
 }
@@ -97,11 +98,24 @@ select:focus-visible, textarea:focus-visible, .qmark:focus-visible, summary:focu
 
 .sub { color: var(--text-dim); font-size: 12px; margin-bottom: 14px; }
 
-/* ============ HEADER PESSOAL ============ */
+/* ============ HEADER PESSOAL (fixo, como a tab bar) ============ */
 .app-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 6px 2px 16px;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 90;
+  background: rgba(14,16,19,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--panel-border);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
 }
+.app-header-inner {
+  max-width: 720px; margin: 0 auto;
+  display: flex; align-items: center; gap: 12px;
+}
+.header-gear {
+  background: none; border: none; padding: 8px; margin: 0;
+  color: var(--text-dim); display: flex; cursor: pointer;
+  transition: color 0.15s ease; border-radius: 8px;
+}
+.header-gear:active { transform: none; }
+.header-gear.active { color: var(--accent); }
 .avatar {
   width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
   background: linear-gradient(180deg, var(--panel-2), var(--panel));

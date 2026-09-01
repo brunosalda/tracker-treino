@@ -40,6 +40,10 @@ function ativarTab(tabName) {
   const barName = BAR_FOR_PANEL[tabName] || tabName;
   document.querySelectorAll('.tabbar-item').forEach(x =>
     x.classList.toggle('active', x.dataset.tab === barName));
+  // "Mais" saiu da tab bar — quando ele (ou uma subpágina dele) está aberto,
+  // a engrenagem do header acende no lugar
+  const gear = document.querySelector('.header-gear');
+  if (gear) gear.classList.toggle('active', barName === 'mais');
   window.scrollTo(0, 0);
   if (tabName === 'historico') carregarHistorico();
   if (tabName === 'biblioteca') renderBiblioteca();
