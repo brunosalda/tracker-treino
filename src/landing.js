@@ -5,7 +5,7 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 // Scroll-reveal: feature rows and the access card animate in once, the first
 // time they cross into view, instead of firing on page load off-screen.
 if (!reduceMotion && 'IntersectionObserver' in window) {
-  const revealTargets = document.querySelectorAll('.feature-row, .access-grid, .showcase, .photo-band');
+  const revealTargets = document.querySelectorAll('.access-grid, .showcase, .photo-band');
   const io = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting) {
@@ -13,10 +13,42 @@ if (!reduceMotion && 'IntersectionObserver' in window) {
         io.unobserve(entry.target);
       }
     }
-  }, { threshold: 0.2, rootMargin: '0px 0px -60px 0px' });
+  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
   revealTargets.forEach((el) => io.observe(el));
 } else {
-  document.querySelectorAll('.feature-row, .access-grid, .showcase, .photo-band').forEach((el) => el.classList.add('is-visible'));
+  document.querySelectorAll('.access-grid, .showcase, .photo-band').forEach((el) => el.classList.add('is-visible'));
+}
+
+/* Parallax: cada seção fotográfica move sua camada de fundo devagar e o
+   painel de vidro na direção oposta — o fundo e o cartão andam em
+   velocidades diferentes, dando o descolamento físico entre os planos. */
+if (!reduceMotion) {
+  const layers = [];
+  document.querySelectorAll('.photo-band, .access, .showcase').forEach((sec) => {
+    const bg = sec.querySelector('.pband-bg');
+    if (!bg) return;
+    const card = sec.querySelector('.band-card, .access-inner');
+    layers.push({ sec, bg, card });
+  });
+  if (layers.length) {
+    let rafId = 0;
+    const update = () => {
+      rafId = 0;
+      const vh = window.innerHeight;
+      for (const { sec, bg, card } of layers) {
+        const r = sec.getBoundingClientRect();
+        if (r.bottom < -120 || r.top > vh + 120) continue;
+        // -1 (seção entrando por baixo) .. +1 (saindo por cima)
+        const prog = ((r.top + r.height / 2) - vh / 2) / ((vh + r.height) / 2);
+        bg.style.transform = `translateY(${(-prog * 7).toFixed(2)}%)`;
+        if (card) card.style.transform = `translateY(${(prog * 30).toFixed(1)}px)`;
+      }
+    };
+    const onScroll = () => { if (!rafId) rafId = requestAnimationFrame(update); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
+  }
 }
 
 // Hero phone: subtle cursor-driven tilt, the one signature motion moment.
