@@ -5,7 +5,7 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 // Scroll-reveal: feature rows and the access card animate in once, the first
 // time they cross into view, instead of firing on page load off-screen.
 if (!reduceMotion && 'IntersectionObserver' in window) {
-  const revealTargets = document.querySelectorAll('.feature-row, .access-grid');
+  const revealTargets = document.querySelectorAll('.feature-row, .access-grid, .showcase');
   const io = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting) {
@@ -16,7 +16,7 @@ if (!reduceMotion && 'IntersectionObserver' in window) {
   }, { threshold: 0.2, rootMargin: '0px 0px -60px 0px' });
   revealTargets.forEach((el) => io.observe(el));
 } else {
-  document.querySelectorAll('.feature-row, .access-grid').forEach((el) => el.classList.add('is-visible'));
+  document.querySelectorAll('.feature-row, .access-grid, .showcase').forEach((el) => el.classList.add('is-visible'));
 }
 
 // Hero phone: subtle cursor-driven tilt, the one signature motion moment.
@@ -33,38 +33,6 @@ if (heroPhone && !reduceMotion) {
   wrap.addEventListener('mouseleave', () => {
     heroPhone.style.transform = '';
   });
-}
-
-// Showcase: scroll position drives the phone's rotation and which callout
-// is lit — the section is tall, the stage is sticky, progress maps 0..1.
-const showcase = document.querySelector('.showcase');
-if (showcase) {
-  const phone = showcase.querySelector('.phone-mock');
-  const callouts = Array.from(showcase.querySelectorAll('.callout'));
-  const windows = [[0.04, 0.45], [0.3, 0.72], [0.58, 1.01]];
-  let rafId = 0;
-  const update = () => {
-    rafId = 0;
-    const rect = showcase.getBoundingClientRect();
-    const total = rect.height - window.innerHeight;
-    if (total <= 0) return;
-    const p = Math.min(1, Math.max(0, -rect.top / total));
-    if (!reduceMotion) {
-      const ry = 16 - p * 26;
-      phone.style.transform = `rotateY(${ry}deg)`;
-    }
-    callouts.forEach((c, i) => {
-      const w = windows[i];
-      c.classList.toggle('on', p >= w[0] && p <= w[1]);
-    });
-  };
-  const onShowcaseScroll = () => {
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(update);
-  };
-  window.addEventListener('scroll', onShowcaseScroll, { passive: true });
-  window.addEventListener('resize', onShowcaseScroll, { passive: true });
-  update();
 }
 
 // Nav gains a solid backing once content starts scrolling under it.

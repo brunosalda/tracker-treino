@@ -81,11 +81,15 @@ a { color: inherit; }
   .hero h1, .hero .lede, .hero-actions, .hero-trust, .phone-mock { animation: none; opacity: 1; }
 }
 @media (max-width: 860px) {
+  /* hero curto e direto no mobile: só o texto + CTA; o celular do hero sai
+     (o showcase logo abaixo já mostra o produto — dois seguidos alongavam
+     a página com telas quase vazias) */
+  .hero { min-height: auto; padding: 104px 24px 64px; }
   .hero-grid { grid-template-columns: 1fr; text-align: center; }
   .hero-content { max-width: 100%; margin: 0 auto; }
   .hero .lede { margin-left: auto; margin-right: auto; }
   .hero-actions { justify-content: center; }
-  .phone-mock { margin: 8px auto 0; }
+  .hero .phone-mock { display: none; }
 }
 
 /* ============ PHONE MOCK ============
@@ -181,22 +185,27 @@ a { color: inherit; }
 .nav-enter { transition: background-color 0.12s ease, border-color 0.12s ease; }
 .nav-enter:hover { background: rgba(21,23,26,0.7); border-color: rgba(255,255,255,0.32); }
 
-/* ============ SHOWCASE (scroll-driven) ============
-   Tall section with a sticky stage: the phone rotates as the page scrolls
-   and callouts light up anchored to the parts of the UI they describe. */
-.showcase { position: relative; height: 240vh; background: var(--bg); }
+/* ============ SHOWCASE ============
+   Normal-height section: the phone sits at a fixed subtle 3D angle and the
+   callouts stagger in once when the section enters the viewport. (The old
+   240vh sticky scroll-scrub read as empty screens on mobile.) */
+.showcase { position: relative; background: var(--bg); }
 .showcase-sticky {
-  position: sticky; top: 0; height: 100svh;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  overflow: hidden; padding: 24px;
+  padding: 100px 24px 90px;
 }
 .showcase h2 {
   font-family: var(--font-display); font-weight: 600; text-transform: uppercase;
   font-size: clamp(24px, 4vw, 34px); letter-spacing: 0.5px; text-align: center;
-  margin: 0 0 32px; color: var(--text);
+  margin: 0 0 36px; color: var(--text);
 }
 .showcase-stage { position: relative; perspective: 1200px; }
-.showcase .phone-mock { width: 230px; padding: 8px 7.5px; margin: 0; animation: none; opacity: 1; }
+.showcase .phone-mock {
+  width: 230px; padding: 8px 7.5px; margin: 0; animation: none;
+  opacity: 0; transform: rotateY(-12deg) rotateX(2deg) translateY(16px);
+  transition: opacity 0.7s cubic-bezier(.2,.7,.2,1), transform 0.7s cubic-bezier(.2,.7,.2,1);
+}
+.showcase.is-visible .phone-mock { opacity: 1; transform: rotateY(-9deg) rotateX(2deg) translateY(0); }
 .callout {
   position: absolute; width: max-content; max-width: 190px;
   background: linear-gradient(180deg, var(--panel-2), var(--panel));
@@ -205,26 +214,30 @@ a { color: inherit; }
   font-family: var(--font-display); font-size: 12.5px; line-height: 1.35;
   text-transform: uppercase; letter-spacing: 0.4px; color: var(--text);
   box-shadow: 0 10px 24px -10px rgba(0,0,0,0.6);
-  opacity: 0; transform: translateY(10px) scale(0.9);
-  transition: opacity 0.3s cubic-bezier(.2,.9,.3,1.1), transform 0.3s cubic-bezier(.2,.9,.3,1.1);
+  opacity: 0; transform: translateY(12px) scale(0.92);
+  transition: opacity 0.5s cubic-bezier(.2,.9,.3,1.05), transform 0.5s cubic-bezier(.2,.9,.3,1.05);
 }
 .callout::before {
   content: ''; position: absolute; left: 10px; top: 50%; margin-top: -3px;
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--steel-light); box-shadow: inset 0 1px 1px rgba(0,0,0,0.5);
 }
-.callout.on { opacity: 1; transform: none; }
+.showcase.is-visible .callout { opacity: 1; transform: none; }
+.showcase.is-visible .co-1 { transition-delay: 0.25s; }
+.showcase.is-visible .co-2 { transition-delay: 0.45s; }
+.showcase.is-visible .co-3 { transition-delay: 0.65s; }
 .callout.co-1 { right: calc(100% + 18px); top: 30%; text-align: right; padding: 9px 24px 9px 13px; }
 .callout.co-1::before { left: auto; right: 10px; }
 .callout.co-2 { left: calc(100% + 18px); top: 48%; }
 .callout.co-3 { right: calc(100% + 18px); top: 66%; text-align: right; padding: 9px 24px 9px 13px; }
 .callout.co-3::before { left: auto; right: 10px; }
 @media (max-width: 780px) {
-  .showcase { height: 220vh; }
-  .showcase-sticky { padding: 16px; }
-  .showcase h2 { font-size: 20px; margin-bottom: 16px; }
-  .showcase-stage { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .showcase-sticky { padding: 72px 20px 64px; }
+  .showcase h2 { font-size: 20px; margin-bottom: 20px; }
+  .showcase-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .showcase .phone-mock { width: 190px; padding: 6px 5.5px; }
+  .showcase .phone-mock, .showcase.is-visible .phone-mock { transform: none; }
+  .showcase.is-visible .phone-mock { opacity: 1; }
   /* compact the inner UI so it fits the 178px screen without wrapping,
      which would stretch the phone past its aspect ratio */
   .showcase .phone-tabs { gap: 4px; margin-bottom: 12px; }
@@ -234,14 +247,13 @@ a { color: inherit; }
   .showcase .phone-stats { margin-top: 12px; }
   .showcase .phone-stats .n { font-size: 14px; }
   .callout, .callout.co-1, .callout.co-2, .callout.co-3 {
-    position: static; text-align: center; opacity: 0.35; transform: none;
+    position: static; text-align: center;
     padding: 6px 12px 6px 23px; font-size: 11.5px; max-width: 260px;
   }
   .callout.co-1::before, .callout.co-3::before { left: 10px; right: auto; }
-  .callout.on { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .callout { transition: none; }
+  .callout, .showcase .phone-mock { transition: none; opacity: 1; transform: none; }
 }
 
 /* ============ FEATURES ============ */
@@ -324,6 +336,16 @@ a { color: inherit; }
   .feature-row, .feature-row.reverse { flex-direction: column; gap: 24px; align-items: stretch; }
   .feature-text, .feature-visual { flex: none; }
   .feature-text p { max-width: 60ch; }
+  /* no toque, slides laterais parecem quebrados — reveal vertical curto */
+  .feature-row .feature-text, .feature-row.reverse .feature-text,
+  .feature-row .feature-visual, .feature-row.reverse .feature-visual {
+    transform: translateY(16px);
+    transition-duration: 0.5s;
+  }
+  .feature-row .feature-visual, .feature-row.reverse .feature-visual { transition-delay: 0.08s; }
+  .feature-row.is-visible .feature-text, .feature-row.is-visible .feature-visual {
+    transform: translateY(0);
+  }
 }
 
 /* ============ ACCESS ============ */
