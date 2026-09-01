@@ -38,14 +38,14 @@ a { color: inherit; }
 .hero {
   position: relative; min-height: min(100svh, 780px); display: flex; align-items: center;
   padding: 110px 24px 60px; overflow: hidden;
-  background-image: url('./assets/splash-barbell.jpg');
-  background-size: cover; background-position: center 35%;
+  background-image: url('./assets/landing-hero.webp');
+  background-size: cover; background-position: center;
 }
 .hero-scrim {
   position: absolute; inset: 0;
   background:
-    linear-gradient(180deg, rgba(11,12,14,0.8) 0%, rgba(11,12,14,0.68) 40%, rgba(11,12,14,0.97) 100%),
-    radial-gradient(ellipse 70% 60% at 20% 30%, rgba(21,23,26,0.25) 0%, rgba(11,12,14,0.8) 70%);
+    linear-gradient(180deg, rgba(11,12,14,0.45) 0%, rgba(11,12,14,0.25) 45%, rgba(11,12,14,0.96) 100%),
+    linear-gradient(100deg, rgba(11,12,14,0.72) 0%, rgba(11,12,14,0.3) 45%, rgba(11,12,14,0.05) 70%);
 }
 .hero-grid {
   position: relative; z-index: 1; width: 100%; max-width: 1160px; margin: 0 auto;
@@ -200,6 +200,37 @@ a { color: inherit; }
   margin: 0 0 36px; color: var(--text);
 }
 .showcase-stage { position: relative; perspective: 1200px; }
+
+/* ---- anilhas flutuantes (asset gerado, fundo transparente) ---- */
+.float-plate {
+  position: absolute; z-index: 0; height: auto;
+  pointer-events: none; user-select: none;
+  filter: drop-shadow(0 26px 38px rgba(0,0,0,0.55));
+}
+.fp-1 {
+  width: 190px; right: -235px; top: 60%;
+  animation: floatPlate 7s ease-in-out infinite alternate;
+}
+.fp-2 {
+  width: 130px; left: -215px; top: -6%;
+  filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5)) blur(1px);
+  animation: floatPlate 9s ease-in-out infinite alternate-reverse;
+}
+.access-grid { position: relative; }
+.fp-3 {
+  width: 120px; right: -40px; top: -58px; z-index: 0;
+  animation: floatPlate 8s ease-in-out infinite alternate;
+}
+@keyframes floatPlate {
+  from { transform: translateY(-10px) rotate(-5deg); }
+  to { transform: translateY(12px) rotate(6deg); }
+}
+@media (max-width: 900px) {
+  .float-plate { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .float-plate { animation: none; }
+}
 .showcase .phone-mock {
   width: 230px; padding: 8px 7.5px; margin: 0; animation: none;
   opacity: 0; transform: rotateY(-12deg) rotateX(2deg) translateY(16px);
