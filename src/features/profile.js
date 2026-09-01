@@ -10,10 +10,13 @@ import { PROGRAM } from '../data/program.js';
 
 const PROFILE_KEY = 'profile';
 
-const NOME_EXERCICIO = {};
-Object.values(PROGRAM).forEach(bloco => {
-  (bloco.exercicios || []).forEach(ex => { NOME_EXERCICIO[ex.id] = ex.nome; });
-});
+function nomesExercicios() {
+  const m = {};
+  Object.values(PROGRAM).forEach(bloco => {
+    (bloco.exercicios || []).forEach(ex => { m[ex.id] = ex.nome; });
+  });
+  return m;
+}
 
 async function lerPerfil() {
   try {
@@ -89,8 +92,9 @@ async function calcularRecordes() {
       } catch (e) {}
     }
   } catch (e) {}
+  const nomes = nomesExercicios();
   return Object.entries(recordes)
-    .map(([exId, r]) => ({ exId, nome: NOME_EXERCICIO[exId] || exId, ...r }))
+    .map(([exId, r]) => ({ exId, nome: nomes[exId] || exId, ...r }))
     .sort((a, b) => b.peso - a.peso);
 }
 

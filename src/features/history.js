@@ -1,6 +1,7 @@
 import { storage, SUPA_URL, supaHeaders } from '../lib/storage.js';
 import { escapeHtml } from '../lib/dom-utils.js';
 import { hojeStr } from '../lib/date-utils.js';
+import { METAS } from '../data/program.js';
 
 /* ============ HISTÓRICO ============ */
 /* ============ ANÁLISE AUTOMÁTICA (IA) ============ */
@@ -93,7 +94,19 @@ async function analisarSemana() {
       }
     } catch (e) {}
 
-    const systemPrompt = `Você é um treinador de elite e nutricionista esportivo baseado em evidências científicas (2015-2026), atendendo um homem de 41 anos, 85kg, 176cm, ativo em musculação, incorporando corrida, com prioridades nesta ordem: cardio, mobilidade/alongamento de MMII, força, manutenção/aumento de massa muscular. Metas nutricionais: ~3050 kcal, 170g proteína, 490g carboidrato, 85g gordura (leve superávit para ganho de massa). Analise os registros recentes de treino, alimentação e peso corporal abaixo e responda em português, de forma direta e prática, em no máximo 220 palavras, com: (1) padrões que você percebeu (dor recorrente, quedas de desempenho, sono baixo, refeições puladas, proteína baixa, tendência de peso muito rápida/lenta/parada, etc), (2) 2-3 sugestões concretas de ajuste (carga, volume, deload, corrida, alimentação ou calorias), (3) um alerta se algo parecer preocupante (dor persistente ou ganho/perda de peso muito rápido, por exemplo) recomendando avaliação profissional presencial. Não invente dados que não estão nos registros.`;
+    // persona do usuário logado (perfil + metas do plano ativo — não são fixas)
+    let bio = 'praticante ativo de musculação, incorporando corrida';
+    try {
+      const rp = await storage.get('profile');
+      if (rp && rp.value) {
+        const p = JSON.parse(rp.value);
+        const partes = [];
+        if (p.idade) partes.push(p.idade + ' anos');
+        if (p.altura) partes.push(p.altura + 'cm');
+        if (partes.length) bio = `praticante de ${partes.join(', ')}, ativo em musculação, incorporando corrida`;
+      }
+    } catch (e) {}
+    const systemPrompt = `Você é um treinador de elite e nutricionista esportivo baseado em evidências científicas (2015-2026), atendendo um ${bio}, com prioridades nesta ordem: cardio, mobilidade/alongamento de MMII, força, manutenção/aumento de massa muscular. Metas nutricionais: ~${METAS.kcal} kcal, ${METAS.proteina}g proteína, ${METAS.carboidrato}g carboidrato, ${METAS.gordura}g gordura. Analise os registros recentes de treino, alimentação e peso corporal abaixo e responda em português, de forma direta e prática, em no máximo 220 palavras, com: (1) padrões que você percebeu (dor recorrente, quedas de desempenho, sono baixo, refeições puladas, proteína baixa, tendência de peso muito rápida/lenta/parada, etc), (2) 2-3 sugestões concretas de ajuste (carga, volume, deload, corrida, alimentação ou calorias), (3) um alerta se algo parecer preocupante (dor persistente ou ganho/perda de peso muito rápido, por exemplo) recomendando avaliação profissional presencial. Não invente dados que não estão nos registros.`;
 
     const userMessage = `Registros de treino:\n${linhas}\n\nRegistros de alimentação:\n${linhasRefeicoes || '(nenhum registrado ainda)'}\n\nPeso corporal (kg):\n${linhasPeso || '(nenhum registrado ainda)'}`;
 

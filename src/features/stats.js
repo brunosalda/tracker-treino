@@ -1,17 +1,21 @@
 import { storage, SUPA_URL, supaHeaders } from '../lib/storage.js';
 import { lineChartSvg, SVG_ACCENT } from '../lib/svg-helpers.js';
 import { barsChart, ganttChart, fcLineChart, scatterChart, bandLineChart, hbarChart, nutriChart } from '../lib/charts.js';
-import { PROGRAM } from '../data/program.js';
+import { PROGRAM, METAS as METAS_PLANO } from '../data/program.js';
 
 /* ============ ESTATÍSTICAS / ANÁLISES (A1–A7) ============
    Fontes: garmin_activities (resumos importados do CSV do Garmin),
    logs do app (musculação com timestamp por série, corridas, mobilidade)
    e meals. Triadas pelo Bruno a partir do dashboard de 01/09. */
 
-const NOME_EXERCICIO = {};
-const EX_DEF = {};
-for (const key of ['A', 'B', 'C', 'mobilidade']) {
-  (PROGRAM[key].exercicios || []).forEach(ex => { NOME_EXERCICIO[ex.id] = ex.nome; EX_DEF[ex.id] = ex; });
+/* mapas id→exercício construídos sob demanda — o PROGRAM pode ter sido
+   substituído pelo plano do usuário logado depois do import deste módulo */
+function mapasExercicios() {
+  const NOME_EXERCICIO = {}, EX_DEF = {};
+  for (const key of Object.keys(PROGRAM)) {
+    (PROGRAM[key].exercicios || []).forEach(ex => { NOME_EXERCICIO[ex.id] = ex.nome; EX_DEF[ex.id] = ex; });
+  }
+  return { NOME_EXERCICIO, EX_DEF };
 }
 
 /* ---- loaders ---- */
@@ -106,7 +110,7 @@ function renderRaioX(logs, key) {
     .map(([exId, sets]) => {
       const tss = sets.filter(s => s.ts).map(s => new Date(s.ts).getTime());
       if (!tss.length) return null;
-      return { exId, nome: NOME_EXERCICIO[exId] || exId, ini: Math.min(...tss), fim: Math.max(...tss) + 45000, nSets: sets.length };
+      return { exId, nome: mapasExercicios().NOME_EXERCICIO[exId] || exId, ini: Math.min(...tss), fim: Math.max(...tss) + 45000, nSets: sets.length };
     })
     .filter(Boolean)
     .sort((a, b) => a.ini - b.ini);
@@ -222,8 +226,8 @@ function paceFmt(p) {
 }
 
 /* ============ A6 — NUTRIÇÃO × METAS ============ */
-const METAS = { kcal: 3050, p: 170 };
 function renderNutricao(meals) {
+  const METAS = { kcal: METAS_PLANO.kcal, p: METAS_PLANO.proteina };
   const area = document.getElementById('an-nutricao');
   const dias = {};
   meals.forEach(m => {
@@ -260,6 +264,7 @@ function renderCargas(logs) {
       }
     });
   });
+  const { NOME_EXERCICIO, EX_DEF } = mapasExercicios();
   const items = Object.entries(recordes)
     .filter(([, r]) => r.peso > 0)
     .map(([exId, r]) => {

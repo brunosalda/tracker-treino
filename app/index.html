@@ -140,12 +140,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
     <div class="card">
       <h3>Meta nutricional de hoje</h3>
-      <div class="stat-grid">
-        <div class="stat"><div class="n">~3050</div><div class="l">kcal</div></div>
-        <div class="stat"><div class="n">170g</div><div class="l">Proteína</div></div>
-        <div class="stat"><div class="n">490g</div><div class="l">Carboidrato</div></div>
-        <div class="stat"><div class="n">85g</div><div class="l">Gordura</div></div>
-      </div>
+      <div class="stat-grid" id="metas-hoje-grid"></div>
       <details>
         <summary>Regras gerais</summary>
         <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
@@ -314,25 +309,13 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   </div>
   <div class="card">
     <h3>Estrutura semanal fixa</h3>
-    <table class="week-table">
+    <table class="week-table" id="plano-week-table">
       <tr><th>Dia</th><th>Sessão</th><th>Foco</th></tr>
-      <tr><td>Segunda</td><td>Musculação A</td><td>Perna (quadríceps) + empurrar</td></tr>
-      <tr><td>Terça</td><td>Corrida Z1 + mobilidade curta</td><td>Base aeróbia</td></tr>
-      <tr><td>Quarta</td><td>Musculação B</td><td>Posterior de cadeia + puxar</td></tr>
-      <tr><td>Quinta</td><td>Mobilidade dedicada MMII<span class="qmark" onclick="abrirGlossario('mmii')">?</span></td><td>Alongamento + descanso ativo</td></tr>
-      <tr><td>Sexta</td><td>Musculação C</td><td>Full body complementar</td></tr>
-      <tr><td>Sábado</td><td>Corrida (variação)</td><td>Tempo / fartlek</td></tr>
-      <tr><td>Domingo</td><td>Corrida longa + mobilidade leve</td><td>Longão Z1–Z2</td></tr>
     </table>
   </div>
   <div class="card">
     <h3>Metas nutricionais</h3>
-    <div class="stat-grid">
-      <div class="stat"><div class="n">~3050</div><div class="l">kcal/dia</div></div>
-      <div class="stat"><div class="n">170g</div><div class="l">Proteína</div></div>
-      <div class="stat"><div class="n">490g</div><div class="l">Carboidrato</div></div>
-      <div class="stat"><div class="n">85g</div><div class="l">Gordura</div></div>
-    </div>
+    <div class="stat-grid" id="metas-plano-grid"></div>
   </div>
   <div class="card">
     <h3>Regra de ouro</h3>

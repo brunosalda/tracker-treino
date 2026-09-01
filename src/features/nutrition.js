@@ -1,4 +1,5 @@
 import { FOODS, MEALS } from '../data/nutrition-data.js';
+import { METAS } from '../data/program.js';
 import { storage } from '../lib/storage.js';
 import { hojeStr, hojeRefeicaoStr } from '../lib/date-utils.js';
 import { escapeHtml } from '../lib/dom-utils.js';
@@ -155,7 +156,7 @@ export async function renderAlimentacao() {
   const area = document.getElementById('refeicoes-area');
   area.innerHTML = '<div class="empty">Carregando refeições...</div>';
 
-  const META_KCAL = 3050, META_PROT = 170, META_CARB = 490, META_GORD = 85;
+  const META_KCAL = METAS.kcal, META_PROT = METAS.proteina, META_CARB = METAS.carboidrato, META_GORD = METAS.gordura;
 
   const registros = {};
   for (const meal of MEALS) {

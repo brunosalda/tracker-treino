@@ -6,6 +6,8 @@ import { renderAlimentacao, populateFoodSelect, renderPesoChart } from './featur
 import { carregarEstatisticas } from './features/stats.js';
 import { initAuthGate } from './features/auth.js';
 import { renderPerfil, initFotoHeader } from './features/profile.js';
+import { carregarPlanoDoUsuario, METAS, SEMANA } from './data/program.js';
+import { storage } from './lib/storage.js';
 import './features/glossary.js';
 import './features/garmin.js';
 import './features/backup.js';
@@ -70,7 +72,30 @@ function ativarSubtab(subtabName) {
 }
 
 /* ============ INIT (só depois de autenticado) ============ */
-function initApp() {
+/* Blocos de metas e a tabela semanal são renderizados do plano ativo —
+   cada usuário pode ter o próprio (chave 'plan' no storage). */
+function renderPlanoUI() {
+  const grid = (kcalLabel) => `
+    <div class="stat"><div class="n">~${METAS.kcal}</div><div class="l">${kcalLabel}</div></div>
+    <div class="stat"><div class="n">${METAS.proteina}g</div><div class="l">Proteína</div></div>
+    <div class="stat"><div class="n">${METAS.carboidrato}g</div><div class="l">Carboidrato</div></div>
+    <div class="stat"><div class="n">${METAS.gordura}g</div><div class="l">Gordura</div></div>`;
+  const hoje = document.getElementById('metas-hoje-grid');
+  if (hoje) hoje.innerHTML = grid('kcal');
+  const plano = document.getElementById('metas-plano-grid');
+  if (plano) plano.innerHTML = grid('kcal/dia');
+  const tabela = document.getElementById('plano-week-table');
+  if (tabela) {
+    tabela.innerHTML = '<tr><th>Dia</th><th>Sessão</th><th>Foco</th></tr>' +
+      SEMANA.map(([dia, sessao, foco]) => `<tr><td>${dia}</td><td>${sessao}</td><td>${foco}</td></tr>`).join('');
+  }
+}
+
+async function initApp() {
+  // plano do usuário ANTES de qualquer render que dependa dele
+  await carregarPlanoDoUsuario(storage);
+  renderPlanoUI();
+
   document.querySelectorAll('.tabbar-item').forEach(t => {
     t.addEventListener('click', () => {
       ativarTab(t.dataset.tab);

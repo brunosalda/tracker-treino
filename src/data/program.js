@@ -43,3 +43,41 @@ export const RUNNING_PLAN = {
   3: { facil: "25 min Z1", variacao: "20 min Z1 + 4×2min em Z3 (tempo) com 2min de trote entre", longo: "35 min Z1–Z2" },
   4: { facil: "25 min Z1", variacao: "25 min Z1 + 5×2min em Z3 (tempo) com 2min de trote entre", longo: "40 min Z1–Z2" }
 };
+
+/* ============ METAS NUTRICIONAIS (padrão; sobrescritas pelo plano do usuário) ============ */
+export const METAS = { kcal: 3050, proteina: 170, carboidrato: 490, gordura: 85 };
+
+/* Tabela "Estrutura semanal" do painel Plano (linhas dia/sessão/foco) */
+export const SEMANA = [
+  ["Segunda", "Musculação A", "Perna (quadríceps) + empurrar"],
+  ["Terça", "Corrida Z1 + mobilidade curta", "Base aeróbia"],
+  ["Quarta", "Musculação B", "Posterior de cadeia + puxar"],
+  ["Quinta", "Mobilidade dedicada MMII", "Alongamento + descanso ativo"],
+  ["Sexta", "Musculação C", "Full body complementar"],
+  ["Sábado", "Corrida (variação)", "Tempo / fartlek"],
+  ["Domingo", "Corrida longa + mobilidade leve", "Longão Z1–Z2"]
+];
+
+/* ============ PLANO POR USUÁRIO ============
+   Tudo acima é o plano PADRÃO (o do Bruno). Se o usuário logado tiver um
+   plano próprio salvo no storage (chave 'plan'), os objetos exportados são
+   MUTADOS in-place aqui — todos os módulos que importaram PROGRAM/METAS/etc
+   passam a enxergar o plano dele automaticamente (live bindings de ESM).
+   Formato do JSON salvo: { PROGRAM?, DAY_TO_TYPE?, RUNNING_PLAN?, METAS?, SEMANA? } */
+function substituir(alvo, novo) {
+  for (const k of Object.keys(alvo)) delete alvo[k];
+  Object.assign(alvo, novo);
+}
+export async function carregarPlanoDoUsuario(storage) {
+  try {
+    const r = await storage.get('plan');
+    if (!r || !r.value) return false;
+    const p = JSON.parse(r.value);
+    if (p.PROGRAM) substituir(PROGRAM, p.PROGRAM);
+    if (p.DAY_TO_TYPE) substituir(DAY_TO_TYPE, p.DAY_TO_TYPE);
+    if (p.RUNNING_PLAN) substituir(RUNNING_PLAN, p.RUNNING_PLAN);
+    if (p.METAS) Object.assign(METAS, p.METAS);
+    if (p.SEMANA) { SEMANA.length = 0; SEMANA.push(...p.SEMANA); }
+    return true;
+  } catch (e) { return false; }
+}
