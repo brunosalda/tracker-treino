@@ -15,6 +15,37 @@ function mostrarForm(nome) {
 }
 function mostrarFormLogin() { mostrarForm('login'); }
 function mostrarFormEsqueciSenha() { mostrarForm('forgot'); }
+function mostrarFormPrimeiroAcesso() { mostrarForm('signup'); }
+
+// Primeiro acesso: o convidado cria a própria senha. Quem pode se cadastrar
+// é decidido no banco (allowlist) — email fora dela é recusado pelo servidor.
+async function criarAcesso() {
+  const email = document.getElementById('signup-email').value.trim();
+  const p1 = document.getElementById('signup-password').value;
+  const p2 = document.getElementById('signup-password-2').value;
+  if (!email) { setStatus('auth-signup-status', 'Digite seu email.', 'err'); return; }
+  if (p1.length < 8) { setStatus('auth-signup-status', 'A senha precisa ter pelo menos 8 caracteres.', 'err'); return; }
+  if (p1 !== p2) { setStatus('auth-signup-status', 'As senhas não coincidem.', 'err'); return; }
+
+  setStatus('auth-signup-status', 'Criando seu acesso...', '');
+  const { data, error } = await supabase.auth.signUp({ email, password: p1 });
+  if (error) {
+    const msg = (error.message || '').toLowerCase();
+    if (msg.includes('not allowed')) {
+      setStatus('auth-signup-status', 'Esse email ainda não está liberado. Fale com quem te convidou.', 'err');
+    } else if (msg.includes('already') || msg.includes('registered')) {
+      setStatus('auth-signup-status', 'Você já tem conta com esse email — use "Já tenho conta" para entrar.', 'err');
+    } else {
+      setStatus('auth-signup-status', 'Não consegui criar o acesso: ' + error.message, 'err');
+    }
+    return;
+  }
+  if (data && data.session) {
+    setStatus('auth-signup-status', '', ''); // onAuthStateChange abre o app
+  } else {
+    setStatus('auth-signup-status', 'Conta criada! Confirme pelo link enviado no seu email e depois entre com sua senha.', 'ok');
+  }
+}
 
 function setStatus(elId, msg, tipo) {
   const el = document.getElementById(elId);
@@ -134,7 +165,9 @@ export function initAuthGate(onAuthenticated) {
     } else {
       appRoot.style.display = 'none';
       authScreen.classList.remove('hidden');
-      mostrarForm('login');
+      // link de convite (…/app?convite=1) abre direto no primeiro acesso
+      const convite = new URLSearchParams(window.location.search).get('convite');
+      mostrarForm(convite ? 'signup' : 'login');
     }
   });
 }
@@ -142,6 +175,8 @@ export function initAuthGate(onAuthenticated) {
 window.fazerLogin = fazerLogin;
 window.mostrarFormLogin = mostrarFormLogin;
 window.mostrarFormEsqueciSenha = mostrarFormEsqueciSenha;
+window.mostrarFormPrimeiroAcesso = mostrarFormPrimeiroAcesso;
+window.criarAcesso = criarAcesso;
 window.enviarRecuperacaoSenha = enviarRecuperacaoSenha;
 window.salvarNovaSenha = salvarNovaSenha;
 window.abrirAlterarSenha = abrirAlterarSenha;
