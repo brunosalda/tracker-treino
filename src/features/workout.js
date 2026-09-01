@@ -52,11 +52,14 @@ export function initDaySelect() {
   const opts = Object.entries(PROGRAM)
     .filter(([k]) => k !== 'mobilidade')
     .map(([k, v]) => ({ v: k, l: (v.label || k).split('—')[0].trim() }));
-  opts.push({ v: "corrida", l: "Corrida" });
+  // Corrida só entra se o plano ativo tiver dia de corrida na semana —
+  // plano de convidado sem corrida não mostra a opção
+  if (Object.values(DAY_TO_TYPE).includes('corrida')) opts.push({ v: "corrida", l: "Corrida" });
   if (PROGRAM.mobilidade) opts.push({ v: "mobilidade", l: (PROGRAM.mobilidade.label || "Mobilidade").split('—')[0].trim() });
   opts.push({ v: "descanso", l: "Descanso" });
   sel.innerHTML = opts.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
-  sel.value = lerEscolhaDoDia() || DAY_TO_TYPE[today];
+  const salvo = lerEscolhaDoDia();
+  sel.value = (salvo && opts.some(o => o.v === salvo)) ? salvo : DAY_TO_TYPE[today];
   sel.addEventListener('change', () => { salvarEscolhaDoDia(sel.value); renderWorkoutArea(sel.value); });
   renderWorkoutArea(sel.value);
 }
