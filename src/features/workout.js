@@ -509,6 +509,7 @@ function iniciarProximaEtapaWizard() {
         ${wizardExecHtml(ex)}
         <div class="suggestion" id="wizard-sugestao" style="margin-top:10px;">Carregando sugestão...</div>
         <button class="big" style="margin-top:14px;width:100%;" onclick="iniciarCronometroSerieWizard()">▶ Iniciar série ${wizard.setIdx + 1}</button>
+        <button class="secondary" style="width:100%;margin-top:8px;" onclick="pularExercicioWizard()">Pular este exercício →</button>
       </div>`;
   } else {
     el.innerHTML = `
@@ -537,6 +538,7 @@ function iniciarProximaEtapaWizard() {
           <button onclick="ajustarValorWizard('rir',1)">+</button>
         </div>
         <button class="big" style="margin-top:10px;width:100%;" onclick="registrarSerieWizard()">Concluir série ${wizard.setIdx + 1}</button>
+        <button class="secondary" style="width:100%;margin-top:8px;" onclick="pularExercicioWizard()">Pular este exercício →</button>
       </div>`;
   }
   preencherSugestaoWizard(ex);
@@ -659,6 +661,21 @@ function iniciarDescansoWizard(segundos, exConcluido) {
 function pularDescansoWizard() {
   clearInterval(wizardTimer);
   avancarEtapaWizard();
+}
+
+// Pula o exercício atual sem registrar nada (séries já feitas dele ficam
+// salvas) — segue direto pro próximo exercício da sessão.
+function pularExercicioWizard() {
+  if (!wizard) return;
+  clearInterval(wizardStopwatch);
+  wizard.exIdx++;
+  wizard.setIdx = 0;
+  if (wizard.exIdx >= wizard.exercicios.length) {
+    renderWizardConcluido();
+    return;
+  }
+  salvarWizardResume();
+  iniciarProximaEtapaWizard();
 }
 
 function avancarEtapaWizard() {
@@ -824,6 +841,7 @@ window.registrarSerieWizard = registrarSerieWizard;
 window.concluirCronometroSerieWizard = concluirCronometroSerieWizard;
 window.iniciarCronometroSerieWizard = iniciarCronometroSerieWizard;
 window.pularDescansoWizard = pularDescansoWizard;
+window.pularExercicioWizard = pularExercicioWizard;
 window.pularDescanso = pularDescanso;
 window.iniciarAlongamento = iniciarAlongamento;
 window.encerrarTreino = encerrarTreino;
