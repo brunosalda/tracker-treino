@@ -67,6 +67,16 @@ if (heroPhone && !reduceMotion) {
   });
 }
 
+/* Convite: quando a landing é aberta com ?convite=1, os botões "Entrar"
+   levam o parâmetro adiante — o convidado vê a página do produto primeiro e,
+   ao entrar, cai direto na tela de criar a senha em vez do login. */
+const conviteParam = new URLSearchParams(window.location.search).get('convite');
+if (conviteParam) {
+  document.querySelectorAll('a[href="/app"]').forEach((a) => {
+    a.setAttribute('href', '/app?convite=' + encodeURIComponent(conviteParam));
+  });
+}
+
 // Nav gains a solid backing once content starts scrolling under it.
 const nav = document.querySelector('.nav');
 if (nav) {
