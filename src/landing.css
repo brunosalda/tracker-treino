@@ -78,7 +78,7 @@ a { color: inherit; }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero h1, .hero .lede, .hero-actions, .hero-trust, .phone-mock { animation: none; opacity: 1; }
+  .hero h1, .hero .lede, .hero-actions, .hero-trust, .phone-photo { animation: none; opacity: 1; }
 }
 @media (max-width: 860px) {
   /* hero curto e direto no mobile: só o texto + CTA; o celular do hero sai
@@ -89,54 +89,42 @@ a { color: inherit; }
   .hero-content { max-width: 100%; margin: 0 auto; }
   .hero .lede { margin-left: auto; margin-right: auto; }
   .hero-actions { justify-content: center; }
-  .hero .phone-mock { display: none; }
+  .hero .phone-photo { display: none; }
 }
 
-/* ============ PHONE MOCK ============
-   Real device proportions (iPhone-class: ~9:19.5), not a rounded div pretending
-   to be one — precise corner radii, titanium-edge gradient with a rim highlight,
-   dynamic island, physical side buttons, glass sheen, home indicator. */
-.phone-mock {
-  position: relative; z-index: 1; flex: none; width: 280px; aspect-ratio: 9 / 19.5; margin-left: auto;
-  background: linear-gradient(155deg, #5a5f66 0%, #2c2f33 12%, #1a1c1f 45%, #0a0b0c 75%, #38393d 100%);
-  border-radius: 20% / 9.5%;
-  padding: 10px 9px; /* fixed px, not %: % padding is relative to the grid column, not this element's own width */
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.12),
-    inset 0 1.5px 0 rgba(255,255,255,0.35),
-    inset 0 -1.5px 0 rgba(0,0,0,0.6),
-    0 40px 70px -20px rgba(0,0,0,0.65),
-    0 10px 24px -8px rgba(0,0,0,0.5);
+/* ============ PHONE (foto real + UI HTML dentro do vidro) ============
+   O hardware é uma foto de produto gerada (FLUX.2 Pro, fundo recortado);
+   a UI continua HTML de verdade posicionada sobre a área medida do vidro
+   (x 4.9%→95.5%, y 2.0%→98.2% do aparelho), com notch e reflexo
+   recriados por cima — texto nítido, aparelho fotográfico. */
+.phone-photo {
+  position: relative; z-index: 1; flex: none; width: 280px; aspect-ratio: 426 / 916; margin-left: auto;
+  filter: drop-shadow(0 40px 60px rgba(0,0,0,0.55)) drop-shadow(0 12px 24px rgba(0,0,0,0.45));
   opacity: 0; animation: heroStamp 0.6s cubic-bezier(.2,.8,.25,1) 0.32s forwards;
   transition: transform 0.2s ease-out;
   transform-style: preserve-3d;
 }
-.phone-mock.small { width: 172px; padding: 6px 5.5px; margin: 0 auto; animation: none; opacity: 1; }
+.phone-photo.small { width: 172px; margin: 0 auto; animation: none; opacity: 1; }
 @media (max-width: 860px) {
-  .phone-mock { width: min(280px, 78vw); }
+  .phone-photo { width: min(280px, 78vw); }
 }
-
-.phone-btn { position: absolute; background: linear-gradient(90deg, #0a0b0c, #26282b); border-radius: 2px; z-index: 3; }
-.phone-btn.side-mute { left: -2px; top: 15.5%; width: 3px; height: 3.4%; }
-.phone-btn.side-vol-up { left: -2px; top: 21%; width: 3px; height: 6%; }
-.phone-btn.side-vol-down { left: -2px; top: 28.5%; width: 3px; height: 6%; }
-.phone-btn.side-power { right: -2px; top: 21%; width: 3px; height: 8.5%; background: linear-gradient(-90deg, #0a0b0c, #26282b); }
-
-.phone-island {
-  position: absolute; top: 2.4%; left: 50%; transform: translateX(-50%);
-  width: 32%; height: 3.2%; background: #000; border-radius: 999px; z-index: 4;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+.pp-img { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; user-select: none; }
+.pp-notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 46%; height: 3.2%; background: #000;
+  border-radius: 0 0 14px 14px; z-index: 4;
 }
-
+.pp-sheen {
+  position: absolute; left: 5.4%; right: 4.8%; top: 2.3%; bottom: 2.1%;
+  border-radius: 11% / 5.2%; z-index: 3; pointer-events: none;
+  background: linear-gradient(200deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.015) 34%, rgba(255,255,255,0) 55%);
+}
 .phone-screen {
-  position: relative; z-index: 2; width: 100%; height: 100%;
-  background:
-    linear-gradient(155deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 18%),
-    var(--bg-inset);
-  border-radius: 16.5% / 7.8%;
-  padding: 11% 8% 6%;
+  position: absolute; left: 5.4%; right: 4.8%; top: 2.3%; bottom: 2.1%; z-index: 1;
+  background: var(--bg-inset);
+  border-radius: 11% / 5.2%;
+  padding: 9% 8% 6%;
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5);
 }
 .phone-statusbar {
   display: flex; justify-content: space-between; align-items: center;
@@ -231,12 +219,12 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .float-plate { animation: none; }
 }
-.showcase .phone-mock {
+.showcase .phone-photo {
   width: 230px; padding: 8px 7.5px; margin: 0; animation: none;
   opacity: 0; transform: rotateY(-12deg) rotateX(2deg) translateY(16px);
   transition: opacity 0.7s cubic-bezier(.2,.7,.2,1), transform 0.7s cubic-bezier(.2,.7,.2,1);
 }
-.showcase.is-visible .phone-mock { opacity: 1; transform: rotateY(-9deg) rotateX(2deg) translateY(0); }
+.showcase.is-visible .phone-photo { opacity: 1; transform: rotateY(-9deg) rotateX(2deg) translateY(0); }
 .callout {
   position: absolute; width: max-content; max-width: 190px;
   background: linear-gradient(180deg, var(--panel-2), var(--panel));
@@ -266,9 +254,9 @@ a { color: inherit; }
   .showcase-sticky { padding: 72px 20px 64px; }
   .showcase h2 { font-size: 20px; margin-bottom: 20px; }
   .showcase-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-  .showcase .phone-mock { width: 190px; padding: 6px 5.5px; }
-  .showcase .phone-mock, .showcase.is-visible .phone-mock { transform: none; }
-  .showcase.is-visible .phone-mock { opacity: 1; }
+  .showcase .phone-photo { width: 190px; padding: 6px 5.5px; }
+  .showcase .phone-photo, .showcase.is-visible .phone-photo { transform: none; }
+  .showcase.is-visible .phone-photo { opacity: 1; }
   /* compact the inner UI so it fits the 178px screen without wrapping,
      which would stretch the phone past its aspect ratio */
   .showcase .phone-tabs { gap: 4px; margin-bottom: 12px; }
@@ -284,7 +272,7 @@ a { color: inherit; }
   .callout.co-1::before, .callout.co-3::before { left: 10px; right: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .callout, .showcase .phone-mock { transition: none; opacity: 1; transform: none; }
+  .callout, .showcase .phone-photo { transition: none; opacity: 1; transform: none; }
 }
 
 /* ============ FEATURES ============ */
@@ -379,23 +367,75 @@ a { color: inherit; }
   }
 }
 
+/* ============ PHOTO BANDS (foto temática + painel translúcido) ============ */
+.photo-band {
+  position: relative; padding: 130px 24px;
+  background-size: cover; background-position: center;
+}
+.band-run { background-image: url('./assets/bg-run.webp'); }
+.band-food { background-image: url('./assets/bg-food.webp'); background-position: center 40%; }
+.photo-band::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(11,12,14,0.9) 0%, rgba(11,12,14,0.32) 26%, rgba(11,12,14,0.38) 72%, rgba(11,12,14,0.9) 100%);
+}
+.band-inner {
+  position: relative; max-width: 1100px; margin: 0 auto;
+  display: flex;
+}
+.band-run .band-inner { justify-content: flex-start; }
+.band-food .band-inner { justify-content: flex-end; }
+.band-card {
+  max-width: 470px; padding: 34px 32px;
+  background: rgba(18,21,26,0.55);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 28px 56px -28px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
+  opacity: 0; transform: translateY(22px);
+  transition: opacity 0.7s cubic-bezier(.2,.7,.2,1), transform 0.7s cubic-bezier(.2,.7,.2,1);
+}
+.photo-band.is-visible .band-card { opacity: 1; transform: translateY(0); }
+.band-card h3 {
+  font-family: var(--font-display); font-size: 30px; text-transform: uppercase; letter-spacing: 0.3px;
+  margin: 0 0 16px; color: var(--text); text-wrap: balance;
+}
+.band-card p { margin: 0 0 20px; font-size: 16px; color: var(--text); opacity: 0.85; line-height: 1.7; }
+@media (max-width: 780px) {
+  .photo-band { padding: 96px 20px; }
+  .band-card { max-width: 100%; padding: 26px 22px; }
+  .band-card h3 { font-size: 24px; }
+  .band-card p { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .band-card { opacity: 1; transform: none; transition: none; }
+}
+
 /* ============ ACCESS ============ */
-.access { background: var(--bg-inset); padding: 120px 24px; border-top: 1px solid var(--panel-border); scroll-margin-top: 90px; }
+.access {
+  position: relative; padding: 120px 24px; scroll-margin-top: 90px;
+  background-image: url('./assets/bg-chalk.webp');
+  background-size: cover; background-position: center;
+}
+.access::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(11,12,14,0.92) 0%, rgba(11,12,14,0.55) 35%, rgba(11,12,14,0.6) 70%, rgba(11,12,14,0.94) 100%);
+}
 .access-grid {
   max-width: 760px; margin: 0 auto;
   display: grid; grid-template-columns: auto 1fr; gap: 48px; align-items: center;
 }
-.access-grid .phone-mock.small, .access-grid .access-inner {
+.access-grid .phone-photo.small, .access-grid .access-inner {
   opacity: 0; transition: opacity 0.7s cubic-bezier(.2,.7,.2,1), transform 0.7s cubic-bezier(.2,.7,.2,1);
 }
-.access-grid .phone-mock.small { transform: translateY(24px) scale(0.94); }
+.access-grid .phone-photo.small { transform: translateY(24px) scale(0.94); }
 .access-grid .access-inner { transform: translateY(24px); transition-delay: 0.12s; }
-.access-grid.is-visible .phone-mock.small, .access-grid.is-visible .access-inner { opacity: 1; transform: translateY(0) scale(1); }
+.access-grid.is-visible .phone-photo.small, .access-grid.is-visible .access-inner { opacity: 1; transform: translateY(0) scale(1); }
 .access-inner {
   text-align: left; position: relative;
-  background: linear-gradient(180deg, var(--panel-2), var(--panel));
-  border: 1px solid var(--panel-border);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.35);
+  background: rgba(18,21,26,0.6);
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 28px 56px -28px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
   border-radius: var(--radius); padding: 44px 36px;
 }
 .access-inner::before {
@@ -432,8 +472,8 @@ a { color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   .feature-row .feature-text, .feature-row .feature-visual,
-  .access-grid .phone-mock.small, .access-grid .access-inner {
+  .access-grid .phone-photo.small, .access-grid .access-inner {
     opacity: 1; transform: none; transition: none;
   }
-  .phone-mock { transition: none; }
+  .phone-photo { transition: none; }
 }

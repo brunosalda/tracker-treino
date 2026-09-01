@@ -5,7 +5,7 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 // Scroll-reveal: feature rows and the access card animate in once, the first
 // time they cross into view, instead of firing on page load off-screen.
 if (!reduceMotion && 'IntersectionObserver' in window) {
-  const revealTargets = document.querySelectorAll('.feature-row, .access-grid, .showcase');
+  const revealTargets = document.querySelectorAll('.feature-row, .access-grid, .showcase, .photo-band');
   const io = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting) {
@@ -16,11 +16,11 @@ if (!reduceMotion && 'IntersectionObserver' in window) {
   }, { threshold: 0.2, rootMargin: '0px 0px -60px 0px' });
   revealTargets.forEach((el) => io.observe(el));
 } else {
-  document.querySelectorAll('.feature-row, .access-grid, .showcase').forEach((el) => el.classList.add('is-visible'));
+  document.querySelectorAll('.feature-row, .access-grid, .showcase, .photo-band').forEach((el) => el.classList.add('is-visible'));
 }
 
 // Hero phone: subtle cursor-driven tilt, the one signature motion moment.
-const heroPhone = document.querySelector('.hero .phone-mock');
+const heroPhone = document.querySelector('.hero .phone-photo');
 if (heroPhone && !reduceMotion) {
   heroPhone.addEventListener('animationend', () => { heroPhone.style.animation = 'none'; }, { once: true });
   const wrap = heroPhone.parentElement;
