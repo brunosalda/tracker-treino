@@ -1,7 +1,7 @@
 import { storage, SUPA_URL, supaHeaders } from '../lib/storage.js';
 import { escapeHtml } from '../lib/dom-utils.js';
 import { hojeStr } from '../lib/date-utils.js';
-import { METAS } from '../data/program.js';
+import { METAS, ORIENTACOES } from '../data/program.js';
 
 /* ============ HISTÓRICO ============ */
 /* ============ ANÁLISE AUTOMÁTICA (IA) ============ */
@@ -106,7 +106,7 @@ async function analisarSemana() {
         if (partes.length) bio = `praticante de ${partes.join(', ')}, ativo em musculação, incorporando corrida`;
       }
     } catch (e) {}
-    const systemPrompt = `Você é um treinador de elite e nutricionista esportivo baseado em evidências científicas (2015-2026), atendendo um ${bio}, com prioridades nesta ordem: cardio, mobilidade/alongamento de MMII, força, manutenção/aumento de massa muscular. Metas nutricionais: ~${METAS.kcal} kcal, ${METAS.proteina}g proteína, ${METAS.carboidrato}g carboidrato, ${METAS.gordura}g gordura. Analise os registros recentes de treino, alimentação e peso corporal abaixo e responda em português, de forma direta e prática, em no máximo 220 palavras, com: (1) padrões que você percebeu (dor recorrente, quedas de desempenho, sono baixo, refeições puladas, proteína baixa, tendência de peso muito rápida/lenta/parada, etc), (2) 2-3 sugestões concretas de ajuste (carga, volume, deload, corrida, alimentação ou calorias), (3) um alerta se algo parecer preocupante (dor persistente ou ganho/perda de peso muito rápido, por exemplo) recomendando avaliação profissional presencial. Não invente dados que não estão nos registros.`;
+    const systemPrompt = `Você é um treinador de elite e nutricionista esportivo baseado em evidências científicas (2015-2026), atendendo um ${bio}, ${ORIENTACOES.analiseContexto}. Metas nutricionais: ~${METAS.kcal} kcal, ${METAS.proteina}g proteína, ${METAS.carboidrato}g carboidrato, ${METAS.gordura}g gordura. Analise os registros recentes de treino, alimentação e peso corporal abaixo e responda em português, de forma direta e prática, em no máximo 220 palavras, com: (1) padrões que você percebeu (dor recorrente, quedas de desempenho, sono baixo, refeições puladas, proteína baixa, tendência de peso muito rápida/lenta/parada, etc), (2) 2-3 sugestões concretas de ajuste (carga, volume, deload, corrida, alimentação ou calorias), (3) um alerta se algo parecer preocupante (dor persistente ou ganho/perda de peso muito rápido, por exemplo) recomendando avaliação profissional presencial. Não invente dados que não estão nos registros.`;
 
     const userMessage = `Registros de treino:\n${linhas}\n\nRegistros de alimentação:\n${linhasRefeicoes || '(nenhum registrado ainda)'}\n\nPeso corporal (kg):\n${linhasPeso || '(nenhum registrado ainda)'}`;
 

@@ -58,6 +58,39 @@ export const SEMANA = [
   ["Domingo", "Corrida longa + mobilidade leve", "Longão Z1–Z2"]
 ];
 
+/* ============ ORIENTAÇÕES (por plano — defaults do plano padrão) ============
+   Aquecimento, diretrizes, finalização, regras de nutrição e o contexto da
+   análise por IA são parte do PLANO, não do app: cada usuário vê as
+   orientações do próprio programa. PROGRAM[chave].aquecimento (lista) pode
+   sobrescrever o aquecimento por treino. */
+export const ORIENTACOES = {
+  aquecimentoItens: [
+    "<strong>Geral (5 min):</strong> esteira, bike ou polichinelos em ritmo leve, só pra subir a temperatura e ativar o corpo.",
+    "<strong>Mobilidade dinâmica (3-5 min):</strong> balanços de perna, agachamento com rotação de tronco, círculos de quadril e ombro — nada de alongamento estático longo aqui.",
+    "<strong>Séries de aproximação:</strong> nos exercícios marcados com 🔥 abaixo, faça 2-3 séries subindo a carga gradualmente até chegar no peso de trabalho — o app já calcula isso pra você com base na sua última sessão."
+  ],
+  aquecimentoAviso: "Nunca comece um exercício composto pesado direto na carga de trabalho, mesmo já aquecido de forma geral.",
+  diretrizes: [
+    'Faça todas as séries entre <strong>RIR 0–3</strong><span class="qmark" onclick="abrirGlossario(\'rir\')">?</span> (perto da falha, sem chegar sempre até zero).',
+    "Descanso conforme indicado em cada exercício — compostos pesados (agachamento, RDL, leg press) precisam de mais tempo que isolados.",
+    "<strong>Progressão:</strong> suba a carga quando completar o topo da faixa de reps com técnica limpa em <em>todas</em> as séries do exercício.",
+    '<strong>Deload:</strong><span class="qmark" onclick="abrirGlossario(\'deload\')">?</span> a cada 4 semanas, considere 1 semana com ~40–50% do volume (menos séries) se sentir fadiga acumulada, dor persistente ou queda de desempenho.',
+    'Amplitude completa (ROM<span class="qmark" onclick="abrirGlossario(\'rom\')">?</span> total) em todos os exercícios — é parte do estímulo de hipertrofia e também trabalha sua mobilidade.'
+  ],
+  finalizacao: { titulo: "Finalização — alongamento MMII (~10 min)", texto: "Independente do treino do dia, feche a sessão com este bloco curto — trabalha diretamente sua prioridade de mobilidade e ajuda a completar a hora de treino.", alongamentosPadrao: true },
+  regrasNutricao: [
+    "Não existe \"janela anabólica\" rígida — o total do dia importa muito mais que o horário exato.",
+    "Creatina: 3–5g todo dia (inclusive em dias de descanso).",
+    "Cafeína: 3–6mg/kg, 30–60min antes do treino/corrida, se tolerar.",
+    "Hidratação: perder mais de 2% do peso em água prejudica desempenho — beba antes de sentir sede."
+  ],
+  analiseContexto: "com prioridades nesta ordem: cardio, mobilidade/alongamento de MMII, força, manutenção/aumento de massa muscular"
+};
+
+/* Plano alimentar detalhado (refeições com opções) — null no plano padrão;
+   planos de convidados podem definir e a aba Alimentação exibe. */
+export let PLANO_ALIMENTAR = null;
+
 /* ============ PLANO POR USUÁRIO ============
    Tudo acima é o plano PADRÃO (o do Bruno). Se o usuário logado tiver um
    plano próprio salvo no storage (chave 'plan'), os objetos exportados são
@@ -78,6 +111,12 @@ export async function carregarPlanoDoUsuario(storage, chave) {
     if (p.RUNNING_PLAN) substituir(RUNNING_PLAN, p.RUNNING_PLAN);
     if (p.METAS) Object.assign(METAS, p.METAS);
     if (p.SEMANA) { SEMANA.length = 0; SEMANA.push(...p.SEMANA); }
+    if (p.ORIENTACOES) substituir(ORIENTACOES, p.ORIENTACOES);
+    if (p.PLANO_ALIMENTAR) PLANO_ALIMENTAR = p.PLANO_ALIMENTAR;
+    if (p.MEALS) {
+      const { MEALS } = await import('./nutrition-data.js');
+      MEALS.length = 0; MEALS.push(...p.MEALS);
+    }
     return true;
   } catch (e) { return false; }
 }

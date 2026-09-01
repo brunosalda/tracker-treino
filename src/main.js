@@ -6,7 +6,7 @@ import { renderAlimentacao, populateFoodSelect, renderPesoChart } from './featur
 import { carregarEstatisticas } from './features/stats.js';
 import { initAuthGate } from './features/auth.js';
 import { renderPerfil, initFotoHeader } from './features/profile.js';
-import { carregarPlanoDoUsuario, METAS, SEMANA } from './data/program.js';
+import { carregarPlanoDoUsuario, METAS, SEMANA, ORIENTACOES, PLANO_ALIMENTAR } from './data/program.js';
 import { storage } from './lib/storage.js';
 import './features/glossary.js';
 import './features/garmin.js';
@@ -118,6 +118,29 @@ function renderPlanoUI() {
   if (tabela) {
     tabela.innerHTML = '<tr><th>Dia</th><th>Sessão</th><th>Foco</th></tr>' +
       SEMANA.map(([dia, sessao, foco]) => `<tr><td>${dia}</td><td>${sessao}</td><td>${foco}</td></tr>`).join('');
+  }
+  const regras = document.getElementById('regras-nutricao');
+  if (regras) {
+    regras.innerHTML = (ORIENTACOES.regrasNutricao && ORIENTACOES.regrasNutricao.length) ? `
+      <details>
+        <summary>Regras gerais</summary>
+        <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
+          ${ORIENTACOES.regrasNutricao.map(r => `<li>${r}</li>`).join('')}
+        </ul>
+      </details>` : '';
+  }
+  const pa = document.getElementById('plano-alimentar-card');
+  if (pa) {
+    pa.innerHTML = (PLANO_ALIMENTAR && PLANO_ALIMENTAR.length) ? `
+      <div class="card">
+        <h3>Seu plano alimentar</h3>
+        ${PLANO_ALIMENTAR.map(ref => `
+          <details>
+            <summary>${ref.nome}${ref.horario ? ` <span style="color:var(--text-faint);font-weight:400;font-size:12px;">· ${ref.horario}</span>` : ''}</summary>
+            ${ref.opcoes.map((o, i) => `<p style="font-size:13px;color:var(--text-dim);line-height:1.55;margin:6px 0;">${ref.opcoes.length > 1 ? `<strong>Opção ${String.fromCharCode(65 + i)}:</strong> ` : ''}${o}</p>`).join('')}
+            ${ref.nota ? `<p style="font-size:12px;color:var(--text-faint);margin:6px 0 0;">${ref.nota}</p>` : ''}
+          </details>`).join('')}
+      </div>` : '';
   }
 }
 

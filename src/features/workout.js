@@ -1,4 +1,4 @@
-import { PROGRAM, DAY_TO_TYPE, RUNNING_PLAN } from '../data/program.js';
+import { PROGRAM, DAY_TO_TYPE, RUNNING_PLAN, ORIENTACOES } from '../data/program.js';
 import { LIBRARY } from '../data/library.js';
 import { DIAGRAMS } from '../data/diagrams.js';
 import { acaoImagemVideo } from '../lib/svg-helpers.js';
@@ -52,7 +52,9 @@ export function initDaySelect() {
   const opts = Object.entries(PROGRAM)
     .filter(([k]) => k !== 'mobilidade')
     .map(([k, v]) => ({ v: k, l: (v.label || k).split('—')[0].trim() }));
-  opts.push({ v: "corrida", l: "Corrida" }, { v: "mobilidade", l: "Mobilidade" }, { v: "descanso", l: "Descanso" });
+  opts.push({ v: "corrida", l: "Corrida" });
+  if (PROGRAM.mobilidade) opts.push({ v: "mobilidade", l: (PROGRAM.mobilidade.label || "Mobilidade").split('—')[0].trim() });
+  opts.push({ v: "descanso", l: "Descanso" });
   sel.innerHTML = opts.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
   sel.value = lerEscolhaDoDia() || DAY_TO_TYPE[today];
   sel.addEventListener('change', () => { salvarEscolhaDoDia(sel.value); renderWorkoutArea(sel.value); });
@@ -73,37 +75,34 @@ async function renderWorkoutArea(type) {
 
   if (type !== 'corrida' && type !== 'mobilidade' && type !== 'descanso' && PROGRAM[type] && PROGRAM[type].exercicios) {
     const prog = PROGRAM[type];
+    // aquecimento do treino específico (se o plano definir) ou o geral do plano
+    const aqItens = prog.aquecimento || ORIENTACOES.aquecimentoItens;
+    const fin = ORIENTACOES.finalizacao;
     area.innerHTML = `
       <div class="card">
         <details>
-          <summary>Aquecimento (antes de começar) — ~10-12 min</summary>
+          <summary>Aquecimento (antes de começar)</summary>
           <ol style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
-            <li><strong>Geral (5 min):</strong> esteira, bike ou polichinelos em ritmo leve, só pra subir a temperatura e ativar o corpo.</li>
-            <li><strong>Mobilidade dinâmica (3-5 min):</strong> balanços de perna, agachamento com rotação de tronco, círculos de quadril e ombro — nada de alongamento estático longo aqui.</li>
-            <li><strong>Séries de aproximação:</strong> nos exercícios marcados com 🔥 abaixo, faça 2-3 séries subindo a carga gradualmente até chegar no peso de trabalho — o app já calcula isso pra você com base na sua última sessão.</li>
+            ${aqItens.map(i => `<li>${i}</li>`).join('')}
           </ol>
-          <p style="font-size:12px;color:var(--danger);margin:4px 0 0;">Nunca comece um exercício composto pesado direto na carga de trabalho, mesmo já aquecido de forma geral.</p>
+          ${ORIENTACOES.aquecimentoAviso ? `<p style="font-size:12px;color:var(--danger);margin:4px 0 0;">${ORIENTACOES.aquecimentoAviso}</p>` : ''}
         </details>
       </div>
       <div class="card">
-        <h3>${prog.label} — ~35-40 min</h3>
+        <h3>${prog.label}</h3>
         <details>
           <summary>Diretrizes de hoje</summary>
           <ul style="font-size:13px;color:var(--text-dim);line-height:1.6;padding-left:18px;margin:4px 0;">
-            <li>Faça todas as séries entre <strong>RIR 0–3</strong><span class="qmark" onclick="abrirGlossario('rir')">?</span> (perto da falha, sem chegar sempre até zero).</li>
-            <li>Descanso conforme indicado em cada exercício — compostos pesados (agachamento, RDL, leg press) precisam de mais tempo que isolados.</li>
-            <li><strong>Progressão:</strong> suba a carga quando completar o topo da faixa de reps com técnica limpa em <em>todas</em> as séries do exercício.</li>
-            <li><strong>Deload:</strong><span class="qmark" onclick="abrirGlossario('deload')">?</span> a cada 4 semanas, considere 1 semana com ~40–50% do volume (menos séries) se sentir fadiga acumulada, dor persistente ou queda de desempenho.</li>
-            <li>Amplitude completa (ROM<span class="qmark" onclick="abrirGlossario('rom')">?</span> total) em todos os exercícios — é parte do estímulo de hipertrofia e também trabalha sua mobilidade.</li>
+            ${ORIENTACOES.diretrizes.map(d => `<li>${d}</li>`).join('')}
           </ul>
         </details>
       </div>
       <div id="wizard-area"></div>
-      <div class="card">
-        <h3>Finalização — alongamento MMII (~10 min)</h3>
-        <p style="font-size:13px;color:var(--text-dim);">Independente do treino do dia, feche a sessão com este bloco curto — trabalha diretamente sua prioridade de mobilidade e ajuda a completar a hora de treino.</p>
-        ${LIBRARY.mobilidade.items.filter(i => ['mob-quadril', 'mob-isquio', 'mob-adutor', 'mob-tornozelo'].includes(i.id)).map(i => renderMobilidadeItem(i, 40, "1-2 séries de 30-45s", "final")).join('')}
-      </div>`;
+      ${fin ? `<div class="card">
+        <h3>${fin.titulo}</h3>
+        <p style="font-size:13px;color:var(--text-dim);">${fin.texto}</p>
+        ${fin.alongamentosPadrao ? LIBRARY.mobilidade.items.filter(i => ['mob-quadril', 'mob-isquio', 'mob-adutor', 'mob-tornozelo'].includes(i.id)).map(i => renderMobilidadeItem(i, 40, "1-2 séries de 30-45s", "final")).join('') : ''}
+      </div>` : ''}`;
     finalizar.style.display = 'block';
     iniciarSessaoTreino(prog.exercicios, 'musculacao');
 
